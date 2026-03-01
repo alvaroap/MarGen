@@ -77,8 +77,11 @@
 
     /* ── RESET ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
+    html {
       height: 100%;
+      background: var(--bg-app);
+    }
+    html, body {
       overscroll-behavior: none;
     }
     body {
@@ -95,7 +98,9 @@
 
     .app-shell {
       background: var(--bg-app);
+      /* Ocupa toda la altura incluyendo la zona del home indicator */
       height: 100dvh;
+      padding-bottom: env(safe-area-inset-bottom);
       max-width: var(--app-w);
       margin: 0 auto;
       overflow: hidden;
@@ -106,10 +111,12 @@
 
     /* En pantallas anchas (tablet/desktop) mostramos como app card */
     @media (min-width: 500px) {
+      html { background: #18181C; }
       body { padding: 2rem 0 4rem; background: #18181C; }
       #root { height: auto; }
       .app-shell {
         height: calc(100dvh - 6rem);
+        padding-bottom: 0;
         border-radius: 2.5rem;
         box-shadow: 0 32px 80px rgba(0,0,0,0.5);
       }
@@ -408,7 +415,6 @@
       max-height: 92dvh;
       display: flex; flex-direction: column;
       overflow: hidden;
-      padding-bottom: env(safe-area-inset-bottom);
     }
     @keyframes slideUp {
       from { transform: translateY(100%); }
@@ -418,7 +424,6 @@
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.25rem 1.5rem 1rem;
-      padding-top: calc(1.25rem + env(safe-area-inset-top));
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
     }
@@ -445,7 +450,7 @@
     }
     .modal-footer {
       flex-shrink: 0;
-      padding: 1rem 1.5rem 2.5rem;
+      padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom));
       border-top: 1px solid var(--border);
       display: flex; flex-direction: column; gap: 0.625rem;
     }
@@ -2489,8 +2494,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
 // Re-trigger Phosphor icon rendering after React mounts
 setTimeout(() => {
-  if (window.PhosphorIcons) window.PhosphorIcons.replace();
-}, 100);
-</script>
-</body>
-</html>
