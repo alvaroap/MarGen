@@ -80,10 +80,10 @@
     html, body {
       height: 100%;
       overscroll-behavior: none;
+      background: var(--bg-app);
     }
     body {
       font-family: var(--font);
-      background: #18181C;
       min-height: 100vh;
       min-height: 100dvh;
       display: flex;
@@ -116,7 +116,6 @@
         box-shadow: 0 32px 80px rgba(0,0,0,0.5);
       }
     }
-
     /* ── HEADER ── */
     .header {
       background: var(--bg-card);
@@ -411,9 +410,10 @@
       width: 100%; max-width: var(--app-w);
       box-shadow: var(--shadow-modal);
       animation: slideUp 350ms var(--ease-out) both;
-      max-height: 92vh;
+      max-height: 92dvh;
       display: flex; flex-direction: column;
       overflow: hidden;
+      padding-bottom: env(safe-area-inset-bottom);
     }
     @keyframes slideUp {
       from { transform: translateY(100%); }
@@ -423,6 +423,7 @@
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.25rem 1.5rem 1rem;
+      padding-top: calc(1.25rem + env(safe-area-inset-top));
       flex-shrink: 0;
       border-bottom: 1px solid var(--border);
     }
