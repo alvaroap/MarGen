@@ -77,36 +77,51 @@
 
     /* ── RESET ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      overscroll-behavior: none;
+    }
     body {
       font-family: var(--font);
       background: #18181C;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      padding: 2rem 0 4rem;
     }
 
     /* ── SHELL ── */
-    #root { width: 100%; max-width: var(--app-w); }
+    #root { width: 100%; max-width: var(--app-w); height: 100vh; height: 100dvh; }
 
     .app-shell {
       background: var(--bg-app);
-      min-height: 100vh;
       height: 100vh;
+      height: 100dvh;
       max-width: var(--app-w);
       margin: 0 auto;
-      border-radius: 2.5rem;
       overflow: hidden;
       position: relative;
       display: flex;
       flex-direction: column;
     }
 
+    /* En pantallas anchas (tablet/desktop) mostramos como app card */
+    @media (min-width: 500px) {
+      body { padding: 2rem 0 4rem; align-items: flex-start; background: #18181C; }
+      #root { height: auto; }
+      .app-shell {
+        height: calc(100vh - 6rem);
+        border-radius: 2.5rem;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+      }
+    }
+
     /* ── HEADER ── */
     .header {
       background: var(--bg-card);
       padding: 1.5rem 1.5rem 1.25rem;
+      padding-top: calc(1.5rem + env(safe-area-inset-top));
       border-radius: 0 0 var(--r-xl) var(--r-xl);
       display: flex;
       align-items: center;
@@ -114,6 +129,7 @@
       gap: 1rem;
       position: relative;
       z-index: 10;
+      flex-shrink: 0;
     }
 
     /* Selector de año — centrado */
@@ -352,7 +368,7 @@
       bottom: 0; left: 50%;
       transform: translateX(-50%);
       width: 100%; max-width: var(--app-w);
-      padding: 1.25rem 1.5rem 2rem;
+      padding: 1.25rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; gap: 0.375rem;
       background: linear-gradient(to top, var(--bg-app) 70%, transparent);
@@ -590,6 +606,7 @@
     /* Header detalle — usa el color del presupuesto */
     .detail-header {
       padding: 1.5rem 1.25rem 1.75rem;
+      padding-top: calc(1.5rem + env(safe-area-inset-top));
       border-radius: 0 0 var(--r-xl) var(--r-xl);
       display: flex; flex-direction: column; gap: 1rem;
     }
@@ -668,6 +685,7 @@
     /* ── PANTALLA GASTOS (nivel 3) ── */
     .gastos-header {
       padding: 1.25rem 1.25rem 1.5rem;
+      padding-top: calc(1.25rem + env(safe-area-inset-top));
       background: var(--bg-card);
       border-bottom: 1px solid var(--border);
       display: flex; flex-direction: column; gap: 0.875rem;
@@ -1002,7 +1020,7 @@
     /* Logo en la zona navy */
     .welcome-logo-nav {
       position: absolute;
-      top: 2.75rem; left: 1.75rem;
+      top: calc(2.75rem + env(safe-area-inset-top)); left: 1.75rem;
       font-size: 2.5rem; font-weight: 800;
       letter-spacing: -0.04em;
       z-index: 10;
@@ -1264,7 +1282,7 @@ const WalletIcon = () => (
 /* ── UTILS ── */
 const fmt = (v) => {
   const n = parseInt(String(v).replace(/\./g, '')) || 0;
-  return n.toLocaleString('es-ES') + ' €';
+  return new Intl.NumberFormat('es-ES', { useGrouping: true }).format(n) + ' €';
 };
 
 const YEARS = ['2024', '2025', '2026', '2027'];
@@ -1440,7 +1458,7 @@ const DetailScreen = ({ budget, year, onBack, onEditBudget, onAddGasto, onEditGa
                       {' · '}
                       {danger
                         ? <span className="plan-sub-overflow">+{fmt(Math.abs(margen))} excedido</span>
-                        : <span>MarGen {fmt(margen)}</span>
+                        : <span>Margen {fmt(margen)}</span>
                       }
                     </div>
                     <div className="plan-progress-bg">
