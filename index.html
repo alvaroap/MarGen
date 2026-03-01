@@ -87,19 +87,19 @@
     body {
       font-family: var(--font);
       background: var(--bg-app);
-      min-height: 100dvh;
+      min-height: var(--real-vh, 100dvh);
       display: flex;
       align-items: flex-start;
       justify-content: center;
     }
 
     /* ── SHELL ── */
-    #root { width: 100%; max-width: var(--app-w); height: 100dvh; }
+    #root { width: 100%; max-width: var(--app-w); height: var(--real-vh, 100dvh); }
 
     .app-shell {
       background: var(--bg-app);
       /* Ocupa toda la altura incluyendo la zona del home indicator */
-      height: 100dvh;
+      height: var(--real-vh, 100dvh);
       padding-bottom: env(safe-area-inset-bottom);
       max-width: var(--app-w);
       margin: 0 auto;
@@ -115,7 +115,7 @@
       body { padding: 2rem 0 4rem; background: #18181C; }
       #root { height: auto; }
       .app-shell {
-        height: calc(100dvh - 6rem);
+        height: calc(var(--real-vh, 100dvh) - 6rem);
         padding-bottom: 0;
         border-radius: 2.5rem;
         box-shadow: 0 32px 80px rgba(0,0,0,0.5);
@@ -412,7 +412,7 @@
       width: 100%; max-width: var(--app-w);
       box-shadow: var(--shadow-modal);
       animation: slideUp 350ms var(--ease-out) both;
-      max-height: 92dvh;
+      max-height: calc(var(--real-vh, 100dvh) * 0.92);
       display: flex; flex-direction: column;
       overflow: hidden;
     }
@@ -1071,6 +1071,15 @@
     }
 
   </style>
+  <script>
+    // Fix altura real en PWA iOS — dvh no siempre funciona en standalone
+    function setRealVh() {
+      const vh = window.innerHeight;
+      document.documentElement.style.setProperty('--real-vh', vh + 'px');
+    }
+    setRealVh();
+    window.addEventListener('resize', setRealVh);
+  </script>
 </head>
 <body>
 <div id="root"></div>
