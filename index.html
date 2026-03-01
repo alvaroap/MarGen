@@ -654,6 +654,8 @@
     }
     .detail-balance.on-light { background: rgba(13,13,85,0.08); }
     .balance-item { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+    .balance-item.balance-item--wide { flex: 1.6; }
+    .balance-item.balance-item--narrow { flex: 0.7; }
     .balance-item + .balance-item { border-left: 1px solid rgba(255,255,255,0.2); padding-left: 1rem; }
     .on-light .balance-item + .balance-item { border-color: rgba(13,13,85,0.15); }
     .balance-label {
@@ -724,6 +726,8 @@
       padding: 1rem 1.25rem; gap: 0.5rem;
     }
     .gastos-balance-item { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+    .gastos-balance-item.balance-item--wide { flex: 1.6; }
+    .gastos-balance-item.balance-item--narrow { flex: 0.7; }
     .gastos-balance-item + .gastos-balance-item { border-left: 1px solid var(--border); padding-left: 1rem; }
     .gastos-balance-label {
       font-size: 0.65rem; font-weight: 700;
@@ -1413,11 +1417,11 @@ const DetailScreen = ({ budget, year, onBack, onEditBudget, onAddGasto, onEditGa
             <span className="balance-label">Total</span>
             <span className="balance-value">{fmt(budget.budget)}</span>
           </div>
-          <div className="balance-item">
+          <div className="balance-item balance-item--narrow">
             <span className="balance-label">Gastado</span>
             <span className="balance-value">{fmt(totalSpent)}</span>
           </div>
-          <div className="balance-item">
+          <div className="balance-item balance-item--wide">
             {planOverflow ? (
               <>
                 <span className="balance-label">Exceso planificado</span>
@@ -1599,11 +1603,11 @@ const GastosScreen = ({ budget, plan, isDirectMode, onBack, onAddGasto, onEditGa
             <span className="gastos-balance-label">Total</span>
             <span className="gastos-balance-value">{fmt(plan.budget)}</span>
           </div>
-          <div className="gastos-balance-item">
+          <div className="gastos-balance-item balance-item--narrow">
             <span className="gastos-balance-label">Gastado</span>
             <span className="gastos-balance-value">{fmt(planSpent)}</span>
           </div>
-          <div className="gastos-balance-item">
+          <div className="gastos-balance-item balance-item--wide">
             <span className="gastos-balance-label">Disponible</span>
             <span className="gastos-balance-value-big">{fmt(resta)}</span>
             <div className="gastos-progress-bg">
