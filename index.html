@@ -1,416 +1,2483 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
-    <title>Margen</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Margen">
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/wallet.png">
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/wallet.png">
-    
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        :root { --bg-app: #F2F2F2; --bg-shell: #E5E7EB; --header-dark: #3d3d3d; --text-main: #1e293b; --text-muted: #475569; --white: #ffffff; --radius-card: 2rem; }
-        body { font-family: "Benton Sans", "Inter", sans-serif; -webkit-font-smoothing: antialiased; background-color: var(--bg-shell); margin: 0; font-size: 16px; overflow-x: hidden; }
-        .app-shell { max-width: 448px; margin: 0 auto; background: var(--bg-app); min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-        @keyframes viewFadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .view-transition { animation: viewFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes modalSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .modal-overlay-bg { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal-animate-content { animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .v-progress-liquid { height: 100%; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        
-        .header-home { background: var(--white); padding: 1.5rem; padding-top: calc(1.5rem + env(safe-area-inset-top)); margin-bottom: 2rem; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-radius: 0 0 1.5rem 1.5rem; }
-        .year-selector { grid-column: 2; font-weight: 900; color: var(--text-main); font-size: 1.875rem; }
-        .btn-export { grid-column: 3; justify-self: end; background: #f8fafc; color: var(--text-muted); width: 2.75rem; height: 2.75rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; border: 1px solid #f1f5f9; cursor: pointer; transition: all 0.2s; }
-        .btn-export.success { background: #22c55e; color: white; border-color: #22c55e; }
-        
-        .header-dark-strip { background-color: var(--header-dark); padding: 1.5rem; padding-top: calc(1.5rem + env(safe-area-inset-top)); color: var(--white); border-radius: 0 0 1.5rem 1.5rem; margin-bottom: 1.5rem; text-align: left; }
-        .main-content { padding: 0 1.5rem 8rem 1.5rem; }
-        .card-presupuesto { background: var(--white); border-radius: var(--radius-card); padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; transition: transform 0.2s; }
-        .card-presupuesto:active { transform: scale(0.98); }
-        .texto-titulo { font-size: 1.5rem; font-weight: 900; color: var(--text-main); line-height: 1; margin-bottom: 0.5rem; }
-        .texto-info-secundaria { display: flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
-        
-        .glass-footer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 448px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border-top: 1px solid rgba(0,0,0,0.1); padding: 1.25rem 0; padding-bottom: calc(1.25rem + env(safe-area-inset-bottom)); border-radius: 2rem 2rem 0 0; z-index: 40; display: flex; flex-direction: column; align-items: center; }
-        .circle-plus { background: #000; color: #fff; width: 3.5rem; height: 3.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin-bottom: 0.25rem; border: none; }
-        
-        .calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; width: 100%; }
-        .calc-btn { padding: 1.25rem 0; border-radius: 1.25rem; font-size: 1.5rem; font-weight: 700; background: #f9fafb; border: none; color: var(--text-main); display: flex; align-items: center; justify-content: center; }
-        .barra-progreso-bg { width: 100%; height: 1rem; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
-        .icono-presupuesto { width: 3.5rem; height: 3.5rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: var(--white); flex-shrink: 0; }
-        .btn-edit-universal { color: var(--text-muted); padding: 0.25rem; display: flex; align-items: center; justify-content: center; background: transparent; border: none; cursor: pointer; flex-shrink: 0; }
-        
-        .gasto-header-title { font-size: 1rem; color: #444; font-weight: 700; margin-bottom: 0.25rem; padding-left: 0.25rem; text-align: left; }
-        .gasto-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; padding: 0 0.25rem; margin-bottom: 1.5rem; }
-        .gasto-icon-btn { aspect-ratio: 1; border-radius: 1rem; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: white; transition: all 0.2s; }
-        .gasto-icon-btn.selected { transform: scale(1.1); box-shadow: 0 0 0 3px #000; }
-        .btn-close-modal { position: absolute; top: 2rem; right: 2rem; background: #f3f4f6; width: 2.5rem; height: 2.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); border: none; z-index: 50; }
-        
-        .date-picker-clean { width: 100%; background: #eff6ff; border: 2px solid #dbeafe; border-radius: 1.5rem; padding: 1.5rem; font-size: 1.25rem; font-weight: 700; color: #1e3a8a; text-align: center; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+  <title>MarGen</title>
+
+  <!-- PWA / iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MarGen">
+  <meta name="theme-color" content="#0D0D55">
+
+  <!-- Favicon SVG inline -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='180' height='180' rx='40' fill='%230D0D55'/%3E%3Ccircle cx='148' cy='42' r='68' fill='%23D9F203'/%3E%3Ccircle cx='30' cy='155' r='32' fill='%235271FF' opacity='.6'/%3E%3Ccircle cx='90' cy='95' r='52' fill='%230D0D55'/%3E%3Crect x='78' y='84' width='24' height='4' rx='2' fill='%23fff'/%3E%3Crect x='88' y='74' width='4' height='24' rx='2' fill='%23fff'/%3E%3C/svg%3E">
+
+  <!-- Apple Touch Icon (iPhone) -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='180' height='180' fill='%230D0D55'/%3E%3Ccircle cx='148' cy='42' r='68' fill='%23D9F203'/%3E%3Ccircle cx='30' cy='155' r='32' fill='%235271FF' opacity='.6'/%3E%3Ccircle cx='90' cy='95' r='52' fill='%230D0D55'/%3E%3Crect x='78' y='84' width='24' height='4' rx='2' fill='%23fff'/%3E%3Crect x='88' y='74' width='4' height='24' rx='2' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    /* ── TOKENS ── */
+    :root {
+      --navy:        #0D0D55;
+      --blue:        #5271FF;
+      --pink:        #E8446A;
+      --lime:        #D9F203;
+
+      --navy-dark:   #06063A;
+      --navy-light:  #3D3D8A;
+      --navy-pale:   #7070B8;
+      --blue-dark:   #2E50E8;
+      --blue-light:  #8FA4FF;
+      --blue-pale:   #C5D0FF;
+      --pink-light:  #FDB5C4;
+      --pink-pale:   #FFE0E7;
+      --lime-dark:   #9DB800;
+      --lime-light:  #E8F96B;
+      --lime-pale:   #F4FCA8;
+
+      --bg-app:      #F4F4EF;
+      --bg-card:     #FFFFFF;
+      --bg-input:    #ECECЕ8;
+      --bg-muted:    #F0F0EB;
+
+      --text:        #0D0D55;
+      --text-sec:    #4A4A7A;
+      --text-muted:  #9494B8;
+      --text-inv:    #FFFFFF;
+
+      --border:      #E2E2DC;
+      --border-str:  #C8C8C0;
+
+      --shadow-card: 0 2px 8px rgba(13,13,85,0.07);
+      --shadow-md:   0 6px 20px rgba(13,13,85,0.11);
+      --shadow-lg:   0 12px 32px rgba(13,13,85,0.14);
+      --shadow-modal:0 -4px 40px rgba(13,13,85,0.15);
+
+      --font:        'Plus Jakarta Sans', sans-serif;
+      --fw-r: 400; --fw-m: 500; --fw-s: 600; --fw-b: 700;
+
+      --r-sm:   0.5rem;
+      --r-md:   1rem;
+      --r-lg:   1.5rem;
+      --r-xl:   2rem;
+      --r-full: 9999px;
+
+      --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      --app-w: 430px;
+    }
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: #18181C;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 0 4rem;
+    }
+
+    /* ── SHELL ── */
+    #root { width: 100%; max-width: var(--app-w); }
+
+    .app-shell {
+      background: var(--bg-app);
+      min-height: 100vh;
+      height: 100vh;
+      max-width: var(--app-w);
+      margin: 0 auto;
+      border-radius: 2.5rem;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--bg-card);
+      padding: 1.5rem 1.5rem 1.25rem;
+      border-radius: 0 0 var(--r-xl) var(--r-xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Selector de año — centrado */
+    .year-selector {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .year-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      user-select: none;
+      padding: 0.5rem 0.75rem 0.5rem 1.5rem;
+      border-radius: var(--r-full);
+      background: var(--bg-app);
+      transition: background 150ms ease;
+    }
+    .year-pill:hover  { background: var(--border); }
+    .year-pill:active { background: var(--border-str); }
+
+    .year-number {
+      font-size: 2rem;
+      font-weight: var(--fw-b);
+      color: var(--text);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .year-chevron {
+      color: var(--text-muted);
+      transition: transform 250ms var(--ease-out);
+      margin-top: 2px;
+    }
+    .year-chevron.open { transform: rotate(180deg); }
+
+    /* Dropdown años */
+    .year-dropdown {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      z-index: 100;
+      min-width: 9rem;
+      animation: dropIn 200ms var(--ease-out) both;
+    }
+    @keyframes dropIn {
+      from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .year-option {
+      padding: 0.875rem 1.25rem;
+      font-size: 1rem;
+      font-weight: var(--fw-s);
+      color: var(--text-sec);
+      cursor: pointer;
+      transition: background 100ms ease, color 100ms ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .year-option:hover  { background: var(--bg-muted); color: var(--text); }
+    .year-option.active { color: var(--blue); font-weight: var(--fw-b); }
+    .year-option + .year-option { border-top: 1px solid var(--border); }
+    .year-check { color: var(--blue); }
+
+    /* Header actions */
+    .header-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+    .icon-btn {
+      width: 2.5rem; height: 2.5rem;
+      border-radius: var(--r-md);
+      background: var(--bg-app);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 150ms ease;
+      flex-shrink: 0;
+    }
+    .icon-btn:hover  { background: var(--border); color: var(--text-sec); }
+    .icon-btn:active { transform: scale(0.95); }
+    .icon-btn.success {
+      background: var(--lime);
+      border-color: var(--lime);
+      color: var(--navy);
+    }
+    .icon-btn svg { width: 18px; height: 18px; }
+
+    /* ── CONTENT ── */
+    .content {
+      flex: 1;
+      padding: 1.25rem 1.25rem 7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+    .content.content-welcome {
+      padding: 0;
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+    }
+
+    /* ── BUDGET CARD ── */
+    .budget-card {
+      border-radius: var(--r-lg);
+      padding: 1rem 1rem 1rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: transform 150ms var(--ease-out), box-shadow 150ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .budget-card:active {
+      transform: scale(0.985);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Contenedor de icono */
+    .card-icon {
+      width: 2.75rem; height: 2.75rem;
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .card-icon svg { width: 20px; height: 20px; }
+    .card-icon i { font-size: 20px; line-height: 1; display: block; }
+
+    /* Icono sobre fondo oscuro */
+    .icon-on-dark {
+      background: rgba(255,255,255,0.20);
+      color: var(--text-inv);
+    }
+    /* Icono sobre fondo claro */
+    .icon-on-light {
+      background: rgba(13,13,85,0.10);
+      color: var(--navy);
+    }
+
+    .card-body { flex: 1; min-width: 0; }
+    .card-name {
+      font-size: 1.25rem;
+      line-height: 1;
+      margin-bottom: 0.175rem;
+    }
+    .card-sub {
+      font-size: 0.75rem;
+      opacity: 0.65;
+    }
+    .card-progress-bg {
+      height: 0.2rem;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 0.4rem;
+    }
+    .card-progress-fill { height: 100%; border-radius: 999px; }
+
+    /* Texto e icono según contraste del fondo */
+    .on-dark .card-name,
+    .on-dark .card-amount { color: var(--text-inv); }
+    .on-dark .card-sub    { color: var(--text-inv); }
+    .on-dark .card-progress-bg  { background: rgba(255,255,255,0.20); }
+    .on-dark .card-progress-fill{ background: rgba(255,255,255,0.75); }
+    .on-dark .card-edit   { background: rgba(255,255,255,0.20); color: rgba(255,255,255,0.9); }
+
+    .on-light .card-name,
+    .on-light .card-amount { color: var(--navy); }
+    .on-light .card-sub    { color: var(--navy); }
+    .on-light .card-progress-bg  { background: rgba(13,13,85,0.13); }
+    .on-light .card-progress-fill{ background: rgba(13,13,85,0.40); }
+    .on-light .card-edit  { background: rgba(13,13,85,0.10); color: rgba(13,13,85,0.7); }
+
+    .card-right {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 0.5rem;
+    }
+    .card-amount {
+      font-size: 1.2rem; letter-spacing: -0.02em; white-space: nowrap;
+    }
+    .card-edit {
+      width: 2rem; height: 2rem;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--r-full);
+      border: none; box-shadow: none;
+      transition: opacity 150ms ease;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .card-edit:hover { opacity: 0.8; }
+    .card-edit svg { width: 14px; height: 14px; }
+
+    /* ── ESTADO VACÍO ── */
+    .empty-state {
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      gap: 0.75rem;
+    }
+    .empty-icon {
+      width: 4rem; height: 4rem;
+      border-radius: var(--r-xl);
+      background: var(--bg-card);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 0.5rem;
+    }
+    .empty-icon svg { width: 28px; height: 28px; }
+    .empty-title {
+      font-size: 1rem; font-weight: var(--fw-b);
+      color: var(--text); letter-spacing: -0.02em;
+    }
+    .empty-sub {
+      font-size: 0.8125rem; font-weight: var(--fw-m);
+      color: var(--text-muted); line-height: 1.5;
+      max-width: 18rem;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      position: fixed;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: var(--app-w);
+      padding: 1.25rem 1.5rem 2rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 0.375rem;
+      background: linear-gradient(to top, var(--bg-app) 70%, transparent);
+      pointer-events: none;
+    }
+    .btn-add {
+      width: 4.5rem; height: 4.5rem;
+      border-radius: var(--r-full);
+      background: var(--navy);
+      color: var(--text-inv);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--shadow-md);
+      transition: transform 200ms var(--ease-spring), box-shadow 200ms ease;
+      pointer-events: all;
+    }
+    .btn-add:hover  { transform: scale(1.06); box-shadow: var(--shadow-lg); }
+    .btn-add:active { transform: scale(0.94); }
+    .btn-add svg { width: 22px; height: 22px; }
+    .btn-add-label {
+      font-size: 0.5625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(13,13,85,0.35);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: flex-end; justify-content: center;
+      animation: fadeIn 250ms ease both;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-sheet {
+      background: var(--bg-card);
+      border-radius: var(--r-xl) var(--r-xl) 0 0;
+      width: 100%; max-width: var(--app-w);
+      box-shadow: var(--shadow-modal);
+      animation: slideUp 350ms var(--ease-out) both;
+      max-height: 92vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem 1rem;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-title {
+      font-size: 1.5rem;
+      color: var(--text); letter-spacing: -0.03em;
+    }
+    .modal-close {
+      width: 2rem; height: 2rem;
+      border-radius: var(--r-full);
+      background: var(--bg-muted);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      transition: background 150ms ease; flex-shrink: 0;
+    }
+    .modal-close:hover { background: var(--border); }
+    .modal-close svg { width: 14px; height: 14px; }
+
+    .modal-content {
+      flex: 1; overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .modal-footer {
+      flex-shrink: 0;
+      padding: 1rem 1.5rem 2.5rem;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 0.625rem;
+    }
+    .modal-footer .btn { margin: 0; }
+
+    /* Form fields */
+    .field { margin-bottom: 1rem; }
+    .field-label {
+      font-size: 0.5625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 0.375rem;
+      display: block;
+    }
+    .field-input {
+      width: 100%;
+      background: var(--bg-muted);
+      border: 1.5px solid transparent;
+      border-radius: var(--r-md);
+      padding: 0.875rem 1rem;
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 150ms ease, background 150ms ease;
+    }
+    .field-input::placeholder { color: var(--text-muted); }
+    .field-input:focus {
+      border-color: var(--blue);
+      background: var(--bg-card);
+    }
+
+    /* Color picker */
+    .color-label {
+      font-size: 0.5625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 0.625rem;
+      display: block;
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .color-dot {
+      aspect-ratio: 1;
+      border-radius: var(--r-full);
+      cursor: pointer;
+      transition: transform 150ms var(--ease-spring);
+      position: relative;
+      border: none;
+    }
+    .color-dot:hover { transform: scale(1.15); }
+    .color-dot.selected::after {
+      content: '';
+      position: absolute; inset: -3px;
+      border-radius: var(--r-full);
+      border: 2px solid var(--navy);
+    }
+
+    /* Icon picker */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      max-height: 14rem;
+      overflow-y: auto;
+    }
+    .icon-opt {
+      aspect-ratio: 1;
+      border-radius: var(--r-md);
+      background: var(--bg-muted);
+      border: 1.5px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text-sec);
+      transition: all 150ms ease;
+    }
+    .icon-opt:hover { background: var(--border); }
+    .icon-opt.selected {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: var(--text-inv);
+    }
+    .icon-opt svg { width: 20px; height: 20px; }
+
+    /* Botones de acción */
+    .btn {
+      width: 100%; border: none; cursor: pointer;
+      font-family: var(--font); font-weight: var(--fw-b);
+      font-size: 0.75rem; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 1rem;
+      border-radius: var(--r-full);
+      transition: transform 150ms ease, opacity 150ms ease;
+    }
+    .btn:active { transform: scale(0.98); opacity: 0.9; }
+    .btn-primary   { background: var(--blue); color: var(--text-inv); }
+    .btn-secondary { background: var(--lime); color: var(--navy); margin-top: 0.625rem; }
+    .btn-danger    { background: transparent; color: var(--pink); font-size: 0.6875rem; margin-top: 0.25rem; }
+
+    /* Importe grande */
+    .amount-display {
+      text-align: center;
+      padding: 0.5rem 0 1.5rem;
+    }
+    .amount-display-label {
+      font-size: 0.5625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 0.5rem;
+    }
+    .amount-display-value {
+      font-size: 3rem; font-weight: var(--fw-b);
+      color: var(--text); letter-spacing: -0.05em; line-height: 1;
+    }
+
+    /* Calculadora */
+    .calc-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem; margin-bottom: 1.25rem;
+    }
+    .calc-btn {
+      padding: 1.125rem 0;
+      border-radius: var(--r-lg);
+      background: var(--bg-muted);
+      border: none; cursor: pointer;
+      font-family: var(--font);
+      font-size: 1.25rem; font-weight: var(--fw-s);
+      color: var(--text);
+      transition: background 100ms ease, transform 100ms ease;
+    }
+    .calc-btn:active { background: var(--border); transform: scale(0.96); }
+    .calc-btn.calc-clear { color: var(--pink); }
+    .calc-btn svg { width: 18px; height: 18px; margin: 0 auto; display: block; }
+
+    /* Separador */
+    .divider { height: 1px; background: var(--border); margin: 1rem 0; }
+
+    /* Animación de entrada de cards */
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .budget-card { animation: cardIn 400ms var(--ease-out) both; }
+
+    /* ── PANTALLA DETALLE ── */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(24px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .detail-screen { animation: slideIn 350ms var(--ease-out) both; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+    /* Header detalle — usa el color del presupuesto */
+    .detail-header {
+      padding: 1.5rem 1.25rem 1.75rem;
+      border-radius: 0 0 var(--r-xl) var(--r-xl);
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .detail-header-top {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .btn-back {
+      width: 2.25rem; height: 2.25rem;
+      border-radius: var(--r-full);
+      background: rgba(255,255,255,0.20);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-inv);
+      transition: background 150ms ease;
+      flex-shrink: 0;
+    }
+    .btn-back:hover  { background: rgba(255,255,255,0.30); }
+    .btn-back:active { transform: scale(0.94); }
+    .btn-back svg { width: 18px; height: 18px; }
+
+    .detail-header-name {
+      font-size: 1.5rem;
+      color: var(--text-inv); letter-spacing: -0.03em;
+    }
+    .detail-edit-btn {
+      width: 2.25rem; height: 2.25rem;
+      border-radius: var(--r-full);
+      background: rgba(255,255,255,0.20);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-inv);
+      transition: background 150ms ease;
+    }
+    .detail-edit-btn:hover { background: rgba(255,255,255,0.30); }
+    .detail-edit-btn svg { width: 15px; height: 15px; }
+
+    /* Resumen saldo */
+    .detail-balance {
+      display: flex; justify-content: space-between;
+      background: rgba(255,255,255,0.15);
+      border-radius: var(--r-lg);
+      padding: 1rem 1.25rem;
+      gap: 0.5rem;
+    }
+    .detail-balance.on-light { background: rgba(13,13,85,0.08); }
+    .balance-item { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+    .balance-item + .balance-item { border-left: 1px solid rgba(255,255,255,0.2); padding-left: 1rem; }
+    .on-light .balance-item + .balance-item { border-color: rgba(13,13,85,0.15); }
+    .balance-label {
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+    }
+    .on-light .balance-label { color: rgba(13,13,85,0.5); }
+    .balance-value {
+      font-size: 1.0rem;
+      color: var(--text-inv); letter-spacing: -0.03em;
+    }
+    .on-light .balance-value { color: var(--navy); }
+    .balance-value-big {
+      font-size: 1.5rem;
+      color: var(--text-inv); letter-spacing: -0.04em; line-height: 1;
+    }
+    .on-light .balance-value-big { color: var(--navy); }
+    /* Barra progreso en header */
+    .detail-progress-bg {
+      height: 0.3rem; border-radius: 999px; overflow: hidden;
+      background: rgba(255,255,255,0.20); margin-top: 0.375rem;
+    }
+    .on-light .detail-progress-bg { background: rgba(13,13,85,0.12); }
+    .detail-progress-fill {
+      height: 100%; border-radius: 999px;
+      transition: width 600ms var(--ease-out);
+    }
+
+    /* ── PANTALLA GASTOS (nivel 3) ── */
+    .gastos-header {
+      padding: 1.25rem 1.25rem 1.5rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 0.875rem;
+      flex-shrink: 0;
+    }
+    .gastos-header-top {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .btn-back-neutral {
+      width: 2.25rem; height: 2.25rem;
+      border-radius: var(--r-full);
+      background: var(--bg-muted);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--navy);
+      transition: background 150ms ease; flex-shrink: 0;
+    }
+    .btn-back-neutral:hover  { background: var(--border); }
+    .btn-back-neutral:active { transform: scale(0.94); }
+    .btn-back-neutral svg { width: 18px; height: 18px; }
+    .gastos-header-titles { display: flex; flex-direction: column; gap: 0.1rem; }
+    .gastos-header-parent {
+      font-size: 0.625rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); line-height: 1;
+    }
+    .gastos-header-name {
+      font-size: 1.5rem;
+      color: var(--navy); letter-spacing: -0.04em; line-height: 1.1;
+    }
+    .gastos-balance {
+      display: flex;
+      background: var(--bg-muted);
+      border-radius: var(--r-lg);
+      padding: 1rem 1.25rem; gap: 0.5rem;
+    }
+    .gastos-balance-item { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+    .gastos-balance-item + .gastos-balance-item { border-left: 1px solid var(--border); padding-left: 1rem; }
+    .gastos-balance-label {
+      font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .gastos-balance-value { font-size: 1rem; color: var(--navy); letter-spacing: -0.03em; }
+    .gastos-balance-value-big { font-size: 1.5rem; color: var(--navy); letter-spacing: -0.04em; line-height: 1; }
+    .gastos-progress-bg {
+      height: 0.3rem; border-radius: 999px; overflow: hidden;
+      background: var(--border); margin-top: 0.375rem;
+    }
+    .gastos-progress-fill { height: 100%; border-radius: 999px; transition: width 600ms var(--ease-out); }
+
+    /* Contenido detalle */
+    .detail-content {
+      flex: 1; padding: 1.25rem 1.25rem 0.5rem;
+      display: flex; flex-direction: column; gap: 1rem;
+      overflow-y: auto; min-height: 0;
+    }
+
+    /* Sección label */
+    .section-label {
+      font-size: 0.5625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 0.5rem;
+    }
+
+    /* Card planificación */
+    .plan-card {
+      background: var(--bg-card);
+      border-radius: var(--r-lg);
+      padding: 1rem 1rem;
+      display: flex; align-items: center; gap: 0.875rem;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: transform 150ms var(--ease-out);
+    }
+    .plan-card:active { transform: scale(0.985); }
+
+    .plan-icon {
+      width: 2.75rem; height: 2.75rem;
+      border-radius: var(--r-md);
+      background: var(--bg-muted);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); flex-shrink: 0;
+    }
+    .plan-icon svg { width: 18px; height: 18px; }
+    .plan-icon i { font-size: 18px; line-height: 1; display: block; }
+    .icon-opt i { font-size: 18px; line-height: 1; display: block; }
+
+    .plan-body { flex: 1; min-width: 0; }
+    .plan-name {
+      font-size: 1.2rem; line-height: 1; margin-bottom: 0.2rem;
+    }
+    .plan-sub {
+      font-size: 0.75rem; color: var(--text-muted);
+    }
+    .plan-sub-overflow {
+      font-weight: var(--fw-b);
+      background: rgba(13,13,85,0.10);
+      color: var(--navy);
+      border-radius: var(--r-full);
+      padding: 0.1em 0.5em;
+      font-size: 0.6875rem;
+      letter-spacing: 0.02em;
+    }
+    .plan-overflow-badge {
+      font-size: 0.5625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      background: rgba(255,255,255,0.25);
+      color: inherit;
+      border-radius: var(--r-full);
+      padding: 0.2em 0.6em;
+      margin-top: 0.35rem;
+      display: inline-block;
+      opacity: 0.85;
+    }
+    /* Separador de fecha en gastos directos */
+    .date-group { margin-bottom: 0.70rem; }
+    .date-group:last-child { margin-bottom: 0; }
+    .date-separator {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 0 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.625rem;
+    }
+    .date-sep-label {
+      font-size: 0.625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .date-sep-total {
+      font-size: 0.625rem; font-weight: var(--fw-b);
+      color: var(--text-muted);
+    }
+    /* Categoría en la card de gasto */
+    .mov-category {
+      font-size: 0.5625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .plan-progress-bg {
+      height: 0.2rem; background: var(--border);
+      border-radius: 999px; overflow: hidden; margin-top: 0.4rem;
+    }
+    .plan-progress-fill {
+      height: 100%; border-radius: 999px; background: var(--blue);
+      transition: width 600ms var(--ease-out);
+    }
+    .plan-progress-fill.danger { background: var(--pink); }
+
+    .plan-right {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;
+    }
+    .plan-amount {
+      font-size: 1.2rem; letter-spacing: -0.02em; white-space: nowrap;
+    }
+    .plan-edit {
+      width: 2rem; height: 2rem;
+      border-radius: var(--r-full);
+      background: var(--bg-muted);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      transition: background 150ms ease;
+    }
+    .plan-edit:hover { background: var(--border); }
+    .plan-edit svg { width: 13px; height: 13px; }
+
+    /* Card gasto directo */
+    .gasto-card {
+      background: var(--bg-card);
+      border-radius: var(--r-lg);
+      padding: 0.875rem 1rem;
+      display: flex; align-items: center; gap: 0.875rem;
+      box-shadow: var(--shadow-card);
+    }
+    .gasto-icon {
+      width: 2.5rem; height: 2.5rem;
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.875rem;
+    }
+    .gasto-body { flex: 1; min-width: 0; }
+    .gasto-name {
+      font-size: 0.875rem; font-weight: var(--fw-s);
+      color: var(--text); line-height: 1; margin-bottom: 0.2rem;
+    }
+    .gasto-date {
+      font-size: 0.625rem; font-weight: var(--fw-m);
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .gasto-amount {
+      font-size: 0.875rem; font-weight: var(--fw-b);
+      color: var(--text); letter-spacing: -0.02em;
+    }
+    .gasto-edit {
+      width: 2rem; height: 2rem;
+      border-radius: var(--r-full);
+      background: var(--bg-muted);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+    }
+    .gasto-edit svg { width: 13px; height: 13px; }
+
+    /* Footer detalle */
+    .detail-footer {
+      position: sticky; bottom: 0;
+      width: 100%;
+      padding: 0.75rem 1.25rem 2rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      background: linear-gradient(to top, var(--bg-app) 80%, transparent);
+      margin-top: auto;
+    }
+    .detail-footer-label {
+      font-size: 0.5625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .detail-footer-btns {
+      display: flex; gap: 0.75rem; width: 100%;
+    }
+    .detail-footer-btns .btn { margin: 0; flex: 1; }
+    .btn-outline {
+      background: var(--bg-card); color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+
+    /* ── MODAL GASTO ── */
+    .gasto-step-indicator {
+      display: flex; justify-content: center; gap: 0.375rem;
+      margin-bottom: 1.5rem;
+    }
+    .step-dot {
+      width: 1.5rem; height: 0.25rem; border-radius: 999px;
+      background: var(--border); transition: background 250ms ease, width 250ms ease;
+    }
+    .step-dot.active { background: var(--navy); width: 2.5rem; }
+
+    /* Input fecha */
+    .date-row {
+      display: flex; gap: 0.5rem; margin-bottom: 1rem;
+    }
+    .date-btn {
+      flex: 1; padding: 0.75rem 0.5rem;
+      background: var(--bg-muted); border: 1.5px solid transparent;
+      border-radius: var(--r-md); cursor: pointer;
+      font-family: var(--font); font-size: 0.8125rem;
+      color: var(--text-sec); text-align: center;
+      transition: all 150ms ease;
+    }
+    .date-btn.selected { border-color: var(--blue); background: var(--bg-card); color: var(--blue); }
+    .date-btn:hover:not(.selected) { background: var(--border); }
+
+    /* Icon picker con grupos */
+    .icon-group-label {
+      font-size: 0.5rem; font-weight: var(--fw-b);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); margin: 0.75rem 0 0.375rem;
+      display: block;
+    }
+    .icon-group-label:first-child { margin-top: 0; }
+    .icon-grid-group {
+      display: grid; grid-template-columns: repeat(6, 1fr);
+      gap: 0.4rem;
+    }
+    .icon-opt {
+      aspect-ratio: 1; border-radius: var(--r-md);
+      background: var(--bg-muted); border: 1.5px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-sec);
+      transition: all 150ms ease;
+      padding: 0.5rem;
+    }
+    .icon-opt:hover { background: var(--border); }
+    .icon-opt.selected { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+    /* Pills de categoría de icono */
+    .icon-category-pills {
+      display: flex; flex-wrap: wrap; gap: 0.375rem;
+    }
+    .icon-cat-pill {
+      font-family: var(--font);
+      font-size: 0.625rem; font-weight: var(--fw-b);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.3em 0.75em;
+      border-radius: var(--r-full);
+      border: 1.5px solid var(--border);
+      background: transparent; color: var(--text-muted);
+      cursor: pointer; transition: all 150ms ease;
+      white-space: nowrap;
+    }
+    .icon-cat-pill:hover { border-color: var(--navy); color: var(--navy); }
+    .icon-cat-pill.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+    /* ── BIENVENIDA ── */
+    .welcome-screen {
+      display: flex; flex-direction: column;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .welcome-top {
+      background: var(--navy);
+      flex: 0 0 calc(50% - 40px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Formas flotantes de la opción A */
+    .w-shape { position: absolute; border-radius: 50%; pointer-events: none; }
+    .w-s1 { width: 180px; height: 180px; background: var(--lime);    top: -50px;  right: -55px; opacity: 0.92;
+             animation: wFloat 6s ease-in-out infinite; }
+    .w-s2 { width: 130px; height: 130px; background: var(--blue);    top: 60px;   left: -45px;  opacity: 0.65;
+             animation: wFloat 8s ease-in-out infinite reverse; }
+    .w-s3 { width: 70px;  height: 70px;  background: var(--pink);    top: 185px;  right: 50px;  opacity: 0.6;
+             animation: wFloat 5s ease-in-out infinite; }
+    .w-s4 { width: 240px; height: 240px; background: #3D3D8A;        top: 140px;  left: 20px;   opacity: 0.45;
+             animation: wFloat 10s ease-in-out infinite reverse; }
+    .w-s5 { width: 50px;  height: 50px;  background: var(--lime);    bottom: 50px; right: 35px; opacity: 0.35;
+             border-radius: 12px; transform: rotate(20deg);
+             animation: wFloat 7s ease-in-out infinite; }
+
+    @keyframes wFloat {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-12px); }
+    }
+
+    /* Logo en la zona navy */
+    .welcome-logo-nav {
+      position: absolute;
+      top: 2.75rem; left: 1.75rem;
+      font-size: 2.5rem; font-weight: 800;
+      letter-spacing: -0.04em;
+      z-index: 10;
+      filter: drop-shadow(0 2px 12px rgba(13,13,85,0.6));
+    }
+    .welcome-logo-nav .wl-m { color: var(--lime); }
+    .welcome-logo-nav .wl-g { color: #fff; }
+
+    /* Onda separadora */
+    .welcome-wave {
+      position: absolute;
+      bottom: -2px; left: -2px;
+      width: calc(100% + 4px);
+      height: 48px; z-index: 5;
+      display: block;
+    }
+
+    /* Zona blanca inferior */
+    .welcome-bottom {
+      flex: 1;
+      padding: 1.75rem 1.875rem 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .welcome-bottom-text {}
+    .welcome-w-line {
+      width: 2.25rem; height: 3px;
+      background: var(--lime);
+      border-radius: 2px;
+      margin-bottom: 1.125rem;
+    }
+    .welcome-w-title {
+      font-size: 1.875rem; font-weight: 800;
+      color: var(--navy); letter-spacing: -0.05em;
+      line-height: 1.05; margin-bottom: 0.75rem;
+    }
+    .welcome-w-sub {
+      font-size: 0.9rem; color: var(--text-muted);
+      line-height: 1.65; max-width: 30ch;
+    }
+    .welcome-bottom-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+  </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const { useState, useEffect, memo } = React;
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback, useRef, useEffect } = React;
 
-        const CATALOGO_PRESUPUESTOS = [
-            { id: 'home', label: 'Vivienda', color: 'bg-blue-500' },
-            { id: 'car-front', label: 'Coche', color: 'bg-slate-600' },
-            { id: 'plane', label: 'Viajes', color: 'bg-cyan-500' },
-            { id: 'utensils', label: 'Restaurante', color: 'bg-orange-400' },
-            { id: 'baby', label: 'Hijos', color: 'bg-pink-400' },
-            { id: 'graduation-cap', label: 'Estudios', color: 'bg-indigo-600' },
-            { id: 'shopping-bag', label: 'Compras', color: 'bg-rose-500' },
-            { id: 'shopping-cart', label: 'Super', color: 'bg-green-500' },
-            { id: 'piggy-bank', label: 'Ahorro', color: 'bg-emerald-600' },
-            { id: 'hand-coins', label: 'Ingresos', color: 'bg-teal-500' },
-            { id: 'heart-pulse', label: 'Salud', color: 'bg-red-500' },
-            { id: 'dog', label: 'Mascotas', color: 'bg-amber-700' },
-            { id: 'smile', label: 'Ocio', color: 'bg-fuchsia-500' },
-            { id: 'dumbbell', label: 'Deporte', color: 'bg-lime-600' },
-            { id: 'laptop', label: 'Tecno', color: 'bg-slate-800' },
-            { id: 'gift', label: 'Regalos', color: 'bg-red-400' },
-            { id: 'zap', label: 'Facturas', color: 'bg-yellow-500' },
-            { id: 'shield-check', label: 'Seguros', color: 'bg-sky-600' },
-            { id: 'hammer', label: 'Reformas', color: 'bg-orange-800' },
-            { id: 'globe', label: 'Misc', color: 'bg-slate-400' }
-        ];
+/* ── PALETA EXTENDIDA ── */
+const PALETTE = [
+  { id: 'navy-dark',  hex: '#06063A', dark: true  },
+  { id: 'navy',       hex: '#0D0D55', dark: true  },
+  { id: 'navy-light', hex: '#3D3D8A', dark: true  },
+  { id: 'navy-pale',  hex: '#7070B8', dark: true  },
+  { id: 'blue-dark',  hex: '#2E50E8', dark: true  },
+  { id: 'blue',       hex: '#5271FF', dark: true  },
+  { id: 'blue-light', hex: '#8FA4FF', dark: false },
+  { id: 'blue-pale',  hex: '#C5D0FF', dark: false },
+  { id: 'pink-dark',  hex: '#E8446A', dark: true  },
+  { id: 'pink-light', hex: '#FDB5C4', dark: false },
+  { id: 'pink-pale',  hex: '#FFE0E7', dark: false },
+  { id: 'lime-dark',  hex: '#9DB800', dark: true  },
+  { id: 'lime',       hex: '#D9F203', dark: false },
+  { id: 'lime-light', hex: '#E8F96B', dark: false },
+  { id: 'lime-pale',  hex: '#F4FCA8', dark: false },
+  { id: 'white',      hex: '#FFFFFF', dark: false },
+];
 
-        const BIBLIOTECA_GASTOS = [
-            { cat: 'Vivienda', color: 'bg-blue-500', icons: ['home', 'hammer', 'lamp', 'tree-pine', 'key-round'] },
-            { cat: 'Coche', color: 'bg-slate-600', icons: ['car', 'fuel', 'train-front', 'parking-circle', 'wrench'] },
-            { cat: 'Viajes', color: 'bg-cyan-500', icons: ['plane', 'map', 'hotel', 'palmtree', 'luggage'] },
-            { cat: 'Restaurante', color: 'bg-orange-400', icons: ['utensils-crossed', 'coffee', 'pizza', 'sandwich', 'ice-cream'] },
-            { cat: 'Hijos', color: 'bg-pink-400', icons: ['baby', 'toy-brick', 'milk', 'book-open', 'milestone'] },
-            { cat: 'Estudios', color: 'bg-indigo-600', icons: ['graduation-cap', 'pencil', 'library', 'microscope', 'scroll'] },
-            { cat: 'Compras', color: 'bg-rose-500', icons: ['shopping-bag', 'shirt', 'footprints', 'watch', 'gem'] },
-            { cat: 'Super', color: 'bg-green-500', icons: ['shopping-cart', 'apple', 'croissant', 'cup-soda', 'sparkles'] },
-            { cat: 'Ahorro', color: 'bg-emerald-600', icons: ['piggy-bank', 'trending-up', 'vault', 'coins', 'landmark'] },
-            { cat: 'Ingresos', color: 'bg-teal-500', icons: ['hand-coins', 'banknote', 'wallet', 'briefcase', 'badge-dollar-sign'] },
-            { cat: 'Salud', color: 'bg-red-500', icons: ['pill', 'stethoscope', 'thermometer', 'activity', 'brain'] },
-            { cat: 'Mascotas', color: 'bg-amber-700', icons: ['dog', 'cat', 'bone', 'fish', 'bird'] },
-            { cat: 'Ocio', color: 'bg-fuchsia-500', icons: ['smile', 'glass-water', 'ticket', 'clapperboard', 'gamepad-2'] },
-            { cat: 'Deporte', color: 'bg-lime-600', icons: ['dumbbell', 'bike', 'trophy', 'mountain', 'timer'] },
-            { cat: 'Tecno', color: 'bg-slate-800', icons: ['laptop', 'smartphone', 'camera', 'headphones', 'tv'] },
-            { cat: 'Regalos', color: 'bg-red-400', icons: ['gift', 'heart', 'party-popper', 'cake', 'flower'] },
-            { cat: 'Facturas', color: 'bg-yellow-500', icons: ['zap', 'droplet', 'wifi', 'flame', 'tv-2'] },
-            { cat: 'Seguros', color: 'bg-sky-600', icons: ['shield-check', 'file-text', 'ambulance', 'life-buoy', 'lock'] },
-            { cat: 'Reformas', color: 'bg-orange-800', icons: ['hammer', 'paint-roller', 'drill', 'construction', 'hard-hat'] },
-            { cat: 'Misc', color: 'bg-slate-400', icons: ['globe', 'package', 'archive', 'more-horizontal', 'help-circle'] }
-        ];
+/* ── ICONOS HEROICONS OUTLINE ── */
+/* ── ICONOS (SVG inline Phosphor-style, viewBox 0 0 256 256) ── */
+/* ── ICONOS PHOSPHOR LIGHT (paths verificados, viewBox 256 256) ── */
+/* ── ICONOS via Phosphor CSS font (ph-light) ── */
+const PhIcon = ({name}) => {
+  useEffect(() => {
+    if (window.PhosphorIcons) window.PhosphorIcons.replace();
+  });
+  return <i className={`ph-light ph-${name}`} />;
+};
 
-        const hardFmt = (val) => {
-            if (val === undefined || val === null) return '0 €';
-            let n = parseInt(val.toString().replace(/\./g, '')) || 0;
-            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ' €';
-        };
+const ICONS = {
+  // Viajes
+  plane:        <PhIcon name="airplane"/>,
+  train:        <PhIcon name="train"/>,
+  car:          <PhIcon name="car"/>,
+  bus:          <PhIcon name="bus"/>,
+  boat:         <PhIcon name="boat"/>,
+  motorcycle:   <PhIcon name="motorcycle"/>,
+  bicycle:      <PhIcon name="bicycle"/>,
+  compass:      <PhIcon name="compass"/>,
+  mappin:       <PhIcon name="map-pin"/>,
+  tent:         <PhIcon name="tent"/>,
+  anchor:       <PhIcon name="anchor"/>,
+  globe:        <PhIcon name="globe"/>,
+  suitcase:     <PhIcon name="suitcase"/>,
+  passport:     <PhIcon name="identification-card"/>,
+  camera:       <PhIcon name="camera"/>,
+  // Alojamiento
+  home:         <PhIcon name="house"/>,
+  building:     <PhIcon name="buildings"/>,
+  bed:          <PhIcon name="bed"/>,
+  key:          <PhIcon name="key"/>,
+  bathtub:      <PhIcon name="bathtub"/>,
+  door:         <PhIcon name="door"/>,
+  // Comida
+  restaurant:   <PhIcon name="fork-knife"/>,
+  coffee:       <PhIcon name="coffee"/>,
+  wine:         <PhIcon name="wine"/>,
+  beer:         <PhIcon name="beer-bottle"/>,
+  cake:         <PhIcon name="cake"/>,
+  pizza:        <PhIcon name="pizza"/>,
+  pot:          <PhIcon name="cooking-pot"/>,
+  icecream:     <PhIcon name="ice-cream"/>,
+  // Transporte
+  gaspump:      <PhIcon name="gas-pump"/>,
+  parkingsign:  <PhIcon name="parking-sign"/>,
+  taxi:         <PhIcon name="taxi"/>,
+  // Ocio
+  ticket:       <PhIcon name="ticket"/>,
+  film:         <PhIcon name="film-strip"/>,
+  music:        <PhIcon name="music-notes"/>,
+  gamepad:      <PhIcon name="game-controller"/>,
+  football:     <PhIcon name="football"/>,
+  basketball:   <PhIcon name="basketball"/>,
+  mountains:    <PhIcon name="mountains"/>,
+  tree:         <PhIcon name="tree"/>,
+  sun:          <PhIcon name="sun"/>,
+  waves:        <PhIcon name="waves"/>,
+  // Salud
+  heart:        <PhIcon name="heart"/>,
+  pill:         <PhIcon name="pill"/>,
+  stethoscope:  <PhIcon name="stethoscope"/>,
+  bandaid:      <PhIcon name="bandaids"/>,
+  dumbbell:     <PhIcon name="barbell"/>,
+  leaf:         <PhIcon name="leaf"/>,
+  drop:         <PhIcon name="drop"/>,
+  // Compras
+  bag:          <PhIcon name="shopping-bag"/>,
+  tag:          <PhIcon name="tag"/>,
+  tshirt:       <PhIcon name="t-shirt"/>,
+  sneaker:      <PhIcon name="sneaker"/>,
+  watch:        <PhIcon name="watch"/>,
+  diamond:      <PhIcon name="diamond"/>,
+  gift:         <PhIcon name="gift"/>,
+  // Hogar
+  sofa:         <PhIcon name="couch"/>,
+  lamp:         <PhIcon name="lamp"/>,
+  wrench:       <PhIcon name="wrench"/>,
+  broom:        <PhIcon name="broom"/>,
+  paintbrush:   <PhIcon name="paint-brush"/>,
+  lightbulb:    <PhIcon name="lightbulb"/>,
+  plug:         <PhIcon name="plug"/>,
+  // Trabajo
+  briefcase:    <PhIcon name="briefcase"/>,
+  laptop:       <PhIcon name="laptop"/>,
+  phone:        <PhIcon name="phone"/>,
+  printer:      <PhIcon name="printer"/>,
+  chart:        <PhIcon name="chart-bar"/>,
+  // Educación
+  book:         <PhIcon name="book"/>,
+  graduationcap:<PhIcon name="graduation-cap"/>,
+  pencil:       <PhIcon name="pencil"/>,
+  backpack:     <PhIcon name="backpack"/>,
+  flask:        <PhIcon name="flask"/>,
+  // Familia
+  baby:         <PhIcon name="baby"/>,
+  paw:          <PhIcon name="paw-print"/>,
+  // Finanzas
+  wallet:       <PhIcon name="wallet"/>,
+  bank:         <PhIcon name="bank"/>,
+  coins:        <PhIcon name="coins"/>,
+  creditcard:   <PhIcon name="credit-card"/>,
+  receipt:      <PhIcon name="receipt"/>,
+  piggybank:    <PhIcon name="piggy-bank"/>,
+  // Misc
+  star:         <PhIcon name="star"/>,
+  bolt:         <PhIcon name="lightning"/>,
+};
 
-        const prettyDate = (iso) => {
-            if(!iso) return "";
-            const [y, m, d] = iso.split("-");
-            const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-            return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
-        };
+const ICON_GROUPS = [
+  { label: 'Viajes',      keys: ['plane','train','car','bus','boat','motorcycle','bicycle','compass','mappin','tent','anchor','globe','suitcase','passport','camera'] },
+  { label: 'Alojamiento', keys: ['home','building','bed','key','bathtub','door'] },
+  { label: 'Comida',      keys: ['restaurant','coffee','wine','beer','cake','pizza','pot','icecream'] },
+  { label: 'Transporte',  keys: ['car','gaspump','parkingsign','taxi','motorcycle','bicycle'] },
+  { label: 'Ocio',        keys: ['ticket','film','music','gamepad','football','basketball','mountains','tree','sun','waves'] },
+  { label: 'Salud',       keys: ['heart','pill','stethoscope','bandaid','dumbbell','leaf','drop'] },
+  { label: 'Compras',     keys: ['bag','tag','tshirt','sneaker','watch','diamond','gift'] },
+  { label: 'Hogar',       keys: ['home','sofa','lamp','wrench','broom','paintbrush','lightbulb','plug'] },
+  { label: 'Trabajo',     keys: ['briefcase','laptop','phone','printer','chart'] },
+  { label: 'Educación',   keys: ['book','graduationcap','pencil','backpack','flask'] },
+  { label: 'Familia',     keys: ['baby','paw','heart','gift'] },
+  { label: 'Finanzas',    keys: ['wallet','bank','coins','creditcard','receipt','piggybank','chart'] },
+  { label: 'Otros',       keys: ['star','bolt','globe','sun','leaf'] },
+];
 
-        const Calculator = memo(({ initialValue = '0', onNext, isEditing, onDelete }) => {
-            const [val, setVal] = useState(initialValue.toString().replace(/\./g, ''));
-            const press = (n) => setVal(prev => prev === '0' ? String(n) : (prev.length > 8 ? prev : prev + n));
-            const back = () => setVal(prev => prev.length <= 1 ? '0' : prev.slice(0, -1));
-            useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
-            return (
-                <div className="text-center">
-                    <p className="text-[0.625rem] font-black uppercase text-slate-400 mb-5 text-center tracking-widest">Importe</p>
-                    <div className="flex items-center justify-center gap-1 font-black text-slate-800 text-5xl tracking-tighter mb-8"><span>{hardFmt(val)}</span></div>
-                    <div className="calc-grid">
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => <button key={n} onClick={() => press(n)} className="calc-btn active:bg-slate-200">{n}</button>)}
-                        <button onClick={() => setVal('0')} className="calc-btn text-red-500 active:bg-red-50">C</button>
-                        <button onClick={() => press(0)} className="calc-btn active:bg-slate-200">0</button>
-                        <button onClick={back} className="calc-btn active:bg-slate-200 flex items-center justify-center"><i data-lucide="delete"></i></button>
+// Qué grupo priorizar según el icono del presupuesto padre
+const ICON_CONTEXT = {
+  plane: 'Viajes', train: 'Viajes', boat: 'Viajes', compass: 'Viajes',
+  tent: 'Viajes', anchor: 'Viajes', suitcase: 'Viajes', mappin: 'Viajes',
+  home: 'Hogar', sofa: 'Hogar', wrench: 'Hogar', lightbulb: 'Hogar',
+  restaurant: 'Comida', coffee: 'Comida', pizza: 'Comida', pot: 'Comida',
+  heart: 'Salud', pill: 'Salud', stethoscope: 'Salud', dumbbell: 'Salud',
+  bag: 'Compras', tag: 'Compras', tshirt: 'Compras', diamond: 'Compras',
+  briefcase: 'Trabajo', laptop: 'Trabajo', chart: 'Trabajo',
+  book: 'Educación', graduationcap: 'Educación', backpack: 'Educación',
+  wallet: 'Finanzas', bank: 'Finanzas', piggybank: 'Finanzas',
+  baby: 'Familia', paw: 'Familia',
+  ticket: 'Ocio', film: 'Ocio', music: 'Ocio', gamepad: 'Ocio',
+};
+/* ── ICONOS UI ── */
+const ChevronDown = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{width:18,height:18}}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+  </svg>
+);
+const DownloadIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+  </svg>
+);
+const CheckIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+  </svg>
+);
+const PlusIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+  </svg>
+);
+const CloseIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+  </svg>
+);
+const PencilIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+  </svg>
+);
+const BackspaceIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z" />
+  </svg>
+);
+const WalletIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
+  </svg>
+);
+
+/* ── UTILS ── */
+const fmt = (v) => {
+  const n = parseInt(String(v).replace(/\./g, '')) || 0;
+  return n.toLocaleString('es-ES') + ' €';
+};
+
+const YEARS = ['2024', '2025', '2026', '2027'];
+
+const INITIAL_DATA = {
+  '2026': [],
+  '2025': [],
+  '2024': [],
+};
+
+const BackIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+  </svg>
+);
+
+/* ── COMPONENTE CARD ── */
+const BudgetCard = ({ item, onEdit, onOpen, style }) => {
+  const palette = PALETTE.find(p => p.id === item.color) || PALETTE[1];
+  const isDark = palette.dark;
+  const spent = item.plans
+    ? item.plans.reduce((s, p) => s + p.movs.reduce((a, m) => a + m.amount, 0), 0)
+      + (item.directMovs || []).reduce((a, m) => a + m.amount, 0)
+    : item.spent;
+  const pct = Math.min(100, Math.round((spent / item.budget) * 100));
+
+  return (
+    <div
+      className={`budget-card ${isDark ? 'on-dark' : 'on-light'}`}
+      style={{ background: palette.hex, animationDelay: style?.delay || '0ms' }}
+      onClick={() => onOpen(item)}
+    >
+      <div className={`card-icon ${isDark ? 'icon-on-dark' : 'icon-on-light'}`}>
+        {ICONS[item.icon] || ICONS.star}
+      </div>
+      <div className="card-body">
+        <div className="card-name">{item.name}</div>
+        <div className="card-sub">Resta {fmt(item.budget - spent)}</div>
+        <div className="card-progress-bg">
+          <div className="card-progress-fill" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+      <div className="card-right">
+        <div className="card-amount">{fmt(item.budget)}</div>
+        <button className="card-edit" onClick={e => { e.stopPropagation(); onEdit(item); }}>
+          <PencilIcon />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ── PANTALLA DETALLE ── */
+const fmtDate = (d) => {
+  const [y, m, day] = d.split('-');
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+};
+
+const DetailScreen = ({ budget, year, onBack, onEditBudget, onAddGasto, onEditGasto, onOpenPlan, onAddPlan, onEditPlan }) => {
+  const palette   = PALETTE.find(p => p.id === budget.color) || PALETTE[1];
+  const isDark    = palette.dark;
+  const iconColor = isDark ? '#FFFFFF' : '#0D0D55';
+  const iconBg    = palette.hex + '33';
+  const progressColor = palette.hex;
+
+  const totalSpent = budget.plans.reduce((s, p) => s + p.movs.reduce((a, m) => a + m.amount, 0), 0)
+    + (budget.directMovs || []).reduce((a, m) => a + m.amount, 0);
+  const resta = budget.budget - totalSpent;
+  const pct   = Math.min(100, Math.round((totalSpent / budget.budget) * 100));
+
+  // Suma de presupuestos de planificaciones vs presupuesto padre
+  const totalPlanned  = budget.plans.reduce((s, p) => s + p.budget, 0);
+  const planOverflow  = totalPlanned > budget.budget;
+
+  // Sin planificaciones y con gastos directos → ir directo a GastosScreen
+  // Si está vacío, se queda en DetailScreen para poder elegir entre planificación o gasto
+  const hasPlans = (budget.plans || []).length > 0;
+  const hasDirectMovs = (budget.directMovs || []).length > 0;
+
+  if (!hasPlans && hasDirectMovs) {
+    const fakePlan = { id: null, name: budget.name, budget: budget.budget, movs: budget.directMovs || [] };
+    return (
+      <GastosScreen
+        budget={budget}
+        plan={fakePlan}
+        isDirectMode={true}
+        onBack={onBack}
+        onAddGasto={onAddGasto}
+        onEditGasto={onEditGasto}
+      />
+    );
+  }
+
+  return (
+    <div className="detail-screen">
+
+      {/* HEADER DETALLE — fondo color del presupuesto */}
+      <div className="detail-header" style={{ background: palette.hex }}>
+        <div className="detail-header-top">
+          <button className="btn-back"
+            style={!isDark ? { background: 'rgba(13,13,85,0.10)', color: 'var(--navy)' } : {}}
+            onClick={onBack}>
+            <BackIcon />
+          </button>
+          <span className="detail-header-name"
+            style={!isDark ? { color: 'var(--navy)' } : {}}>
+            {budget.name}
+          </span>
+          <button className="detail-edit-btn"
+            style={!isDark ? { color: 'var(--navy)', background: 'rgba(13,13,85,0.10)' } : {}}
+            onClick={() => onEditBudget(budget)}>
+            <PencilIcon />
+          </button>
+        </div>
+
+        <div className={`detail-balance${!isDark ? ' on-light' : ''}`}>
+          <div className="balance-item">
+            <span className="balance-label">Total</span>
+            <span className="balance-value">{fmt(budget.budget)}</span>
+          </div>
+          <div className="balance-item">
+            <span className="balance-label">Gastado</span>
+            <span className="balance-value">{fmt(totalSpent)}</span>
+          </div>
+          <div className="balance-item">
+            {planOverflow ? (
+              <>
+                <span className="balance-label">Exceso planificado</span>
+                <span className="balance-value-big">{fmt(resta)}</span>
+                <div className="plan-overflow-badge">
+                  ▲ {fmt(totalPlanned - budget.budget)} sobre presupuesto
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="balance-label">Disponible</span>
+                <span className="balance-value-big">{fmt(resta)}</span>
+              </>
+            )}
+            <div className="detail-progress-bg">
+              <div className="detail-progress-fill" style={{
+                width: `${pct}%`,
+                background: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(13,13,85,0.4)'
+              }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTENIDO */}
+      <div className="detail-content">
+
+        {/* PLANIFICACIONES */}
+        {budget.plans.length > 0 && (
+          <>
+            <div className="section-label">Planificaciones</div>
+            {budget.plans.map(plan => {
+              const planSpent = plan.movs.reduce((a, m) => a + m.amount, 0);
+              const planPct   = Math.min(100, Math.round((planSpent / plan.budget) * 100));
+              const danger    = planSpent > plan.budget;
+              const margen    = plan.budget - planSpent;
+              return (
+                <div key={plan.id} className="plan-card" style={{ cursor:'pointer' }}
+                  onClick={() => onOpenPlan(plan)}>
+                  <div className="plan-icon" style={{ background: palette.hex, color: iconColor }}>
+                    {ICONS[plan.icon] || ICONS[budget.icon] || ICONS.star}
+                  </div>
+                  <div className="plan-body">
+                    <div className="plan-name">{plan.name}</div>
+                    <div className="plan-sub">
+                      {plan.movs.length} movimiento{plan.movs.length !== 1 ? 's' : ''}
+                      {' · '}
+                      {danger
+                        ? <span className="plan-sub-overflow">+{fmt(Math.abs(margen))} excedido</span>
+                        : <span>MarGen {fmt(margen)}</span>
+                      }
                     </div>
-                    <button onClick={() => onNext(val)} className="w-full mt-6 py-5 bg-green-600 text-white rounded-[24px] text-lg font-black uppercase tracking-widest border-none">Siguiente</button>
-                    {isEditing && (
-                        <button onClick={onDelete} className="w-full mt-3 py-4 bg-red-50 text-red-600 rounded-[24px] font-black text-[0.625rem] uppercase tracking-widest border-none">Eliminar gasto</button>
-                    )}
+                    <div className="plan-progress-bg">
+                      <div className="plan-progress-fill"
+                        style={{ width: `${Math.min(100, planPct)}%`, background: progressColor }}
+                      />
+                    </div>
+                  </div>
+                  <div className="plan-right">
+                    <span className="plan-amount">{fmt(plan.budget)}</span>
+                    <button className="plan-edit" onClick={e => { e.stopPropagation(); onEditPlan(plan); }}><PencilIcon /></button>
+                  </div>
                 </div>
-            );
-        });
+              );
+            })}
+          </>
+        )}
 
-        const App = () => {
-            const [yearsData, setYearsData] = useState(() => {
-                const saved = localStorage.getItem('margen_v822_data');
-                return saved ? JSON.parse(saved) : { "2026": [] };
-            });
-            const [currentYear, setCurrentYear] = useState("2026");
-            const [view, setView] = useState('home'); 
-            const [selectedPId, setSelectedPId] = useState(null);
-            const [selectedSubId, setSelectedSubId] = useState(null);
-            const [selectedMovId, setSelectedMovId] = useState(null);
-            const [isModalOpen, setIsModalOpen] = useState(false);
-            const [modalType, setModalType] = useState(''); 
-            const [modalStep, setModalStep] = useState('importe');
-            const [formGasto, setFormGasto] = useState({ importe: '0', catId: 'Misc', icon: 'more-horizontal', fecha: new Date().toISOString().split('T')[0], nota: '' });
-            const [entryForm, setEntryForm] = useState({ n: '', val: '', icono: 'home' });
-            const [exportStatus, setExportStatus] = useState(false);
-            const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-
-            useEffect(() => { localStorage.setItem('margen_v822_data', JSON.stringify(yearsData)); }, [yearsData]);
-            useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
-
-            const handleExport = () => {
-                const dataStr = JSON.stringify(yearsData, null, 2);
-                const blob = new Blob([dataStr], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url; link.download = `Margen_Backup.json`;
-                document.body.appendChild(link); link.click(); document.body.removeChild(link);
-                setExportStatus(true); setTimeout(() => setExportStatus(false), 2000);
-            };
-
-            const openModal = (type, step = 'importe', initialData = null) => {
-                if (initialData) {
-                    if (type === 'add_g') setFormGasto(initialData);
-                    else setEntryForm(initialData);
-                } else {
-                    setEntryForm({ n: '', val: '', icono: 'home' });
-                    setFormGasto({ importe: '0', catId: 'Misc', icon: 'more-horizontal', fecha: new Date().toISOString().split('T')[0], nota: '' });
-                }
-                setModalType(type); setModalStep(step); setIsModalOpen(true);
-            };
-
-            const handleSaveEntry = () => {
-                const valNum = parseInt(entryForm.val) || 0;
-                const catInfo = CATALOGO_PRESUPUESTOS.find(c => c.id === entryForm.icono) || CATALOGO_PRESUPUESTOS[0];
-                let newList = [...(yearsData[currentYear] || [])];
-                if (modalType === 'add_p') newList.push({ id: Date.now(), n: entryForm.n, i: entryForm.icono, c: catInfo.color, total: valNum, sub: [], directMovs: [] });
-                else if (modalType === 'edit_p') newList = newList.map(p => p.id === selectedPId ? { ...p, n: entryForm.n, total: valNum, i: entryForm.icono, c: catInfo.color } : p);
-                else if (modalType === 'add_s') newList = newList.map(p => p.id === selectedPId ? { ...p, sub: [...(p.sub || []), { id: Date.now(), n: entryForm.n, i: 'folder', lim: valNum, movs: [] }] } : p);
-                else if (modalType === 'edit_s') newList = newList.map(p => p.id === selectedPId ? { ...p, sub: p.sub.map(s => s.id === selectedSubId ? { ...s, n: entryForm.n, lim: valNum } : s) } : p);
-                setYearsData({ ...yearsData, [currentYear]: newList });
-                setIsModalOpen(false); setTimeout(() => { if (window.lucide) window.lucide.createIcons(); }, 10);
-            };
-
-            const handleFinalizarGasto = () => {
-                const mov = { id: selectedMovId || Date.now(), concepto: formGasto.nota || "Gasto", importe: formGasto.importe, fecha: formGasto.fecha, catId: formGasto.catId, icon: formGasto.icon };
-                const newList = (yearsData[currentYear] || []).map(p => {
-                    if (p.id !== selectedPId) return p;
-                    if (selectedSubId) {
-                        const existingSub = p.sub.find(s => s.id === selectedSubId);
-                        const otherMovs = (existingSub?.movs || []).filter(m => m.id !== (selectedMovId || 0));
-                        return { ...p, sub: p.sub.map(s => s.id === selectedSubId ? { ...s, movs: [mov, ...otherMovs] } : s) };
-                    }
-                    const otherDirect = (p.directMovs || []).filter(m => m.id !== (selectedMovId || 0));
-                    return { ...p, directMovs: [mov, ...otherDirect] };
-                });
-                setYearsData({ ...yearsData, [currentYear]: newList });
-                setIsModalOpen(false); setSelectedMovId(null);
-                setTimeout(() => { if (window.lucide) window.lucide.createIcons(); }, 50);
-            };
-
-            const handleDeleteGasto = () => {
-                const newList = (yearsData[currentYear] || []).map(p => {
-                    if (p.id !== selectedPId) return p;
-                    if (selectedSubId) return { ...p, sub: p.sub.map(s => s.id === selectedSubId ? { ...s, movs: s.movs.filter(m => m.id !== selectedMovId) } : s) };
-                    return { ...p, directMovs: (p.directMovs || []).filter(m => m.id !== selectedMovId) };
-                });
-                setYearsData({ ...yearsData, [currentYear]: newList });
-                setShowConfirmDelete(false); setIsModalOpen(false); setSelectedMovId(null);
-            };
-
-            const handleDeletePresupuesto = () => {
-                setYearsData({ ...yearsData, [currentYear]: (yearsData[currentYear] || []).filter(p => p.id !== selectedPId) });
-                setShowConfirmDelete(false); setIsModalOpen(false); setView('home');
-            };
-
-            const handleDeletePlanificacion = () => {
-                const newList = (yearsData[currentYear] || []).map(p => p.id === selectedPId ? { ...p, sub: p.sub.filter(s => s.id !== selectedSubId) } : p);
-                setYearsData({ ...yearsData, [currentYear]: newList });
-                setShowConfirmDelete(false); setIsModalOpen(false); setView('detalle');
-            };
-
-            const currentYearList = yearsData[currentYear] || [];
-            const pAct = currentYearList.find(p => p.id === selectedPId) || null;
-            const sAct = pAct?.sub?.find(s => s.id === selectedSubId) || null;
-            const getGasS = (s) => (s.movs || []).reduce((acc, m) => acc + parseInt(m.importe.toString().replace(/\./g,'')), 0);
-            const getGasP = (p) => (p.sub || []).reduce((acc, s) => acc + getGasS(s), 0) + (p.directMovs || []).reduce((acc, m) => acc + parseInt(m.importe.toString().replace(/\./g,'')), 0);
-
-            const getOrderedGroups = (movs) => {
-                const groups = (movs || []).reduce((acc, m) => {
-                    if(!acc[m.fecha]) acc[m.fecha] = [];
-                    acc[m.fecha].push(m);
-                    return acc;
-                }, {});
-                return Object.keys(groups).sort((a, b) => new Date(b) - new Date(a)).map(fecha => ({
-                    fecha,
-                    movs: groups[fecha]
-                }));
-            };
-
-            return (
-                <div className="app-shell">
-                    {view === 'home' && (
-                        <div key="home" className="view-transition">
-                            <header className="header-home"><div className="year-selector"><span>{currentYear}</span></div><button onClick={handleExport} className={`btn-export ${exportStatus ? 'success' : ''}`}><i data-lucide={exportStatus ? "check" : "cloud-download"}></i></button></header>
-                            <div className="main-content">
-                                {currentYearList.map(p => (
-                                    <div key={p.id} className="card-presupuesto shadow-sm">
-                                        <div onClick={() => {setSelectedPId(p.id); setView('detalle');}} className="flex items-center gap-3 flex-grow cursor-pointer text-left">
-                                            <div key={`${p.i}-${p.c}`} className={`icono-presupuesto ${p.c}`}><i data-lucide={p.i}></i></div>
-                                            <div><h3 className="texto-titulo">{p.n}</h3><div className="texto-info-secundaria"><span>{hardFmt(p.total)}</span><span className="opacity-30">|</span><span>Resta: {hardFmt(p.total - getGasP(p))}</span></div></div>
-                                        </div>
-                                        <button onClick={() => { setSelectedPId(p.id); openModal('edit_p', 'importe', { n: p.n, val: p.total.toString(), icono: p.i }); }} className="btn-edit-universal"><i data-lucide="pen-line"></i></button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {view === 'detalle' && pAct && (
-                        <div key="detalle" className="flex flex-col view-transition text-left">
-                            <header className="header-dark-strip"><div className="flex items-center gap-4"><button onClick={() => setView('home')} className="bg-white/10 p-2 rounded-xl border-none text-white"><i data-lucide="chevron-left"></i></button><h2 className="text-2xl font-black">{pAct.n}</h2></div></header>
-                            <main className="px-6 pb-32">
-                                <div className="bg-white p-8 rounded-[2.5rem] mb-6 text-left shadow-sm">
-                                    <p className="text-[0.625rem] font-black uppercase text-slate-400 text-center mb-1 tracking-widest">Disponible</p>
-                                    <div className="flex justify-between items-baseline mb-2"><h3 className="text-4xl font-black">{hardFmt(pAct.total - getGasP(pAct))}</h3><span className="text-[0.6875rem] font-bold text-slate-400 uppercase">de {hardFmt(pAct.total)}</span></div>
-                                    <div className="barra-progreso-bg"><div className={`${pAct.c} v-progress-liquid`} style={{ width: `${Math.min(100, (getGasP(pAct)/pAct.total)*100)}%` }}></div></div>
-                                </div>
-                                {pAct.sub.map(s => (
-                                    <div key={s.id} className="card-presupuesto shadow-sm">
-                                        <div onClick={() => {setSelectedSubId(s.id); setView('gastos');}} className="flex items-center gap-3 flex-grow cursor-pointer text-left"><div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0"><i data-lucide="folder"></i></div><div><h4 className="text-xl font-extrabold text-slate-800">{s.n}</h4><div className="texto-info-secundaria text-xs"><span>Plan: {hardFmt(s.lim)}</span><span>•</span><span>Gasto: {hardFmt(getGasS(s))}</span></div></div></div>
-                                        <button onClick={() => { setSelectedSubId(s.id); setSelectedPId(pAct.id); openModal('edit_s', 'importe', { n: s.n, val: s.lim.toString() }); }} className="btn-edit-universal"><i data-lucide="pen-line"></i></button>
-                                    </div>
-                                ))}
-                                
-                                {pAct.directMovs && pAct.directMovs.length > 0 && (
-                                    <div className="mt-8">
-                                        <p className="text-[0.625rem] font-black uppercase text-slate-400 mb-4 px-2 tracking-widest text-left">Gastos Directos</p>
-                                        {getOrderedGroups(pAct.directMovs).map((group) => (
-                                            <section key={group.fecha} className="mb-8">
-                                                <div className="flex justify-between border-b border-slate-200 pb-2 mb-4 text-[0.6875rem] font-black text-slate-400 uppercase">
-                                                    <span>{prettyDate(group.fecha)}</span>
-                                                    <span>-{hardFmt(group.movs.reduce((sum,m)=>sum+parseInt(m.importe.toString().replace(/\./g,'')),0))}</span>
-                                                </div>
-                                                {group.movs.map((m) => {
-                                                    const theme = BIBLIOTECA_GASTOS.find(b => b.cat === m.catId) || BIBLIOTECA_GASTOS[BIBLIOTECA_GASTOS.length - 1];
-                                                    return (
-                                                        <div key={m.id} className="card-presupuesto p-5 mb-3 shadow-sm">
-                                                            <div className="flex items-center gap-3 flex-grow text-left"><div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-md flex-shrink-0 ${theme.color}`}><i data-lucide={m.icon}></i></div><div><h4 className="font-bold">{m.concepto}</h4><p className="text-[0.625rem] font-black text-slate-400 uppercase">{m.catId}</p></div></div>
-                                                            <div className="flex items-center gap-3"><span className="text-lg font-black">{hardFmt(m.importe)}</span><button onClick={() => { setSelectedSubId(null); setSelectedMovId(m.id); openModal('add_g', 'importe', {importe: m.importe, catId:m.catId, icon:m.icon, fecha: m.fecha, nota: m.concepto}); }} className="btn-edit-universal"><i data-lucide="pen-line"></i></button></div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </section>
-                                        ))}
-                                    </div>
-                                )}
-                            </main>
-                        </div>
-                    )}
-
-                    {view === 'gastos' && sAct && (
-                        <div key="gastos" className="flex-grow view-transition text-left">
-                            <header className="header-dark-strip"><div className="flex items-center gap-4 mb-6"><button onClick={() => setView('detalle')} className="bg-white/10 p-2 rounded-xl border-none text-white"><i data-lucide="chevron-left"></i></button><h2 className="text-xl font-black uppercase tracking-widest">{sAct.n}</h2></div><div className="flex justify-between bg-black/20 rounded-[2rem] p-5 text-center"><div><p className="opacity-60 text-[0.5rem] uppercase mb-1">Plan</p><p className="font-black">{hardFmt(sAct.lim)}</p></div><div><p className="opacity-60 text-[0.5rem] uppercase mb-1">Gastos</p><p className="font-black">{hardFmt(getGasS(sAct))}</p></div><div><p className="opacity-60 text-[0.5rem] uppercase mb-1">Saldo</p><p className="font-black text-green-400">{hardFmt(sAct.lim - getGasS(sAct))}</p></div></div></header>
-                            <main className="px-6 pb-32">
-                                {getOrderedGroups(sAct.movs).map((group) => (
-                                    <section key={group.fecha} className="mb-8">
-                                        <div className="flex justify-between border-b border-slate-200 pb-2 mb-4 text-[0.6875rem] font-black text-slate-400 uppercase"><span>{prettyDate(group.fecha)}</span><span>-{hardFmt(group.movs.reduce((sum,m)=>sum+parseInt(m.importe.toString().replace(/\./g,'')),0))}</span></div>
-                                        {group.movs.map((m) => {
-                                            const theme = BIBLIOTECA_GASTOS.find(b => b.cat === m.catId) || BIBLIOTECA_GASTOS[BIBLIOTECA_GASTOS.length - 1];
-                                            return (
-                                                <div key={m.id} className="card-presupuesto p-5 mb-3 shadow-sm">
-                                                    <div className="flex items-center gap-3 flex-grow text-left"><div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-md flex-shrink-0 ${theme.color}`}><i data-lucide={m.icon}></i></div><div><h4 className="font-bold">{m.concepto}</h4><p className="text-[0.625rem] font-black text-slate-400 uppercase">{prettyDate(m.fecha)} • {m.catId}</p></div></div>
-                                                    <div className="flex items-center gap-3"><span className="text-lg font-black">{hardFmt(m.importe)}</span><button onClick={() => { setSelectedSubId(sAct.id); setSelectedMovId(m.id); openModal('add_g', 'importe', {importe: m.importe, catId:m.catId, icon:m.icon, fecha: m.fecha, nota: m.concepto}); }} className="btn-edit-universal"><i data-lucide="pen-line"></i></button></div>
-                                                </div>
-                                            )
-                                        })}
-                                    </section>
-                                ))}
-                            </main>
-                        </div>
-                    )}
-
-                    <footer className="glass-footer">
-                        <button onClick={() => { if(view === 'home') openModal('add_p'); else if(view === 'detalle') openModal('choice'); else openModal('add_g', 'importe'); }} className="circle-plus active:scale-90 transition-transform shadow-lg">+</button>
-                    </footer>
-
-                    {isModalOpen && (
-                        <div className="fixed inset-0 z-[100] flex flex-col justify-end modal-overlay-bg bg-black/60 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
-                            <div className="relative w-full max-w-[448px] mx-auto bg-white rounded-t-[2.5rem] p-8 pb-12 shadow-2xl overflow-y-auto max-h-[90vh] modal-animate-content">
-                                <button onClick={() => setIsModalOpen(false)} className="btn-close-modal"><i data-lucide="x"></i></button>
-                                <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8"></div>
-                                {modalType === 'choice' && (
-                                    <div className="text-left animate-in"><h2 className="texto-titulo text-xl mb-6 text-slate-800">Añadir</h2><button onClick={() => openModal('add_s')} className="w-full bg-slate-50 p-6 rounded-3xl text-left mb-4 border-none active:bg-slate-100 transition-colors"><h3 className="font-extrabold text-lg text-slate-800">Planificación</h3><p className="text-[0.625rem] font-black uppercase text-slate-400 tracking-widest">Carpeta de grupos</p></button><button onClick={() => { setSelectedSubId(null); setSelectedMovId(null); openModal('add_g', 'importe'); }} className="w-full bg-slate-50 p-6 rounded-3xl text-left border-none active:bg-slate-100 transition-colors"><h3 className="font-extrabold text-lg text-slate-800">Gasto directo</h3><p className="text-[0.625rem] font-black uppercase text-slate-400 tracking-widest">Registrar movimiento</p></button></div>
-                                )}
-                                {(modalType.startsWith('add') || modalType.startsWith('edit')) && modalType !== 'add_g' && (
-                                    <div className="animate-in text-left">
-                                        <h2 className="texto-titulo text-xl mb-6 text-slate-800">Configuración</h2>
-                                        <div className="bg-slate-50 p-5 rounded-3xl mb-4"><p className="text-[0.5rem] font-black uppercase text-slate-400 mb-1 tracking-widest">Nombre</p><input value={entryForm.n} onChange={e=>setEntryForm({...entryForm, n:e.target.value})} type="text" className="bg-transparent w-full text-lg font-bold outline-none border-none text-slate-800" placeholder="Nombre..." /></div>
-                                        <div className="bg-slate-50 p-5 rounded-3xl mb-6"><p className="text-[0.5rem] font-black uppercase text-slate-400 mb-1 tracking-widest">Importe</p><input value={entryForm.val} onChange={e=>setEntryForm({...entryForm, val:e.target.value})} type="number" className="bg-transparent w-full text-lg font-bold outline-none border-none text-slate-800" placeholder="0 €" /></div>
-                                        {!modalType.includes('_s') && (<div className="grid grid-cols-4 gap-2 mb-8">{CATALOGO_PRESUPUESTOS.map(item => (<div key={item.id} onClick={()=>setEntryForm({...entryForm, icono:item.id})} className={`p-4 rounded-2xl flex flex-col items-center gap-1 transition-all ${entryForm.icono === item.id ? 'bg-black text-white scale-105 shadow-xl' : 'bg-slate-50 text-slate-400'}`}><i data-lucide={item.id}></i><span className="text-[0.5rem] uppercase font-black text-center">{item.label}</span></div>))}</div>)}
-                                        <div className="flex flex-col gap-3">
-                                            <button onClick={handleSaveEntry} className="w-full py-5 bg-black text-white rounded-[24px] font-black text-xs uppercase border-none active:opacity-80">GUARDAR</button>
-                                            {modalType === 'edit_p' && (<button onClick={() => setShowConfirmDelete(true)} className="w-full py-4 bg-red-50 text-red-600 rounded-[24px] font-black text-[0.625rem] uppercase tracking-widest border-none">Eliminar presupuesto</button>)}
-                                            {modalType === 'edit_s' && (<button onClick={() => setShowConfirmDelete(true)} className="w-full py-4 bg-red-50 text-red-600 rounded-[24px] font-black text-[0.625rem] uppercase tracking-widest border-none">Eliminar planificación</button>)}
-                                        </div>
-                                    </div>
-                                )}
-                                {modalType === 'add_g' && (
-                                    <div className="animate-in">
-                                        {modalStep === 'importe' && <Calculator initialValue={formGasto.importe} onNext={v => { setFormGasto({...formGasto, importe: v}); setModalStep('categoria'); }} isEditing={!!selectedMovId} onDelete={() => setShowConfirmDelete(true)} />}
-                                        {modalStep === 'categoria' && (<div className="text-left px-2"><div className="max-h-[60vh] overflow-y-auto">{BIBLIOTECA_GASTOS.map(item => (<div key={item.cat} className="mb-4 text-left"><h3 className="gasto-header-title text-slate-800">{item.cat}</h3><hr className="mb-2 opacity-10" /><div className="gasto-grid">{item.icons.map(iconName => (<button key={iconName} onClick={() => { setFormGasto({...formGasto, catId: item.cat, icon: iconName}); setModalStep('fecha'); }} className={`gasto-icon-btn ${item.color} ${formGasto.icon === iconName && formGasto.catId === item.cat ? 'selected scale-110' : ''}`}><i data-lucide={iconName}></i></button>))}</div></div>))}</div></div>)}
-                                        {modalStep === 'fecha' && (
-                                            <div className="text-left">
-                                                <h2 className="texto-titulo text-xl mb-6 text-center text-slate-800">Seleccionar Fecha</h2>
-                                                <div className="mb-4">
-                                                    <input 
-                                                        type="date" 
-                                                        value={formGasto.fecha} 
-                                                        onChange={e => setFormGasto({...formGasto, fecha: e.target.value})} 
-                                                        className="date-picker-clean"
-                                                    />
-                                                </div>
-                                                <button onClick={() => setModalStep('note')} className="w-full py-5 bg-black text-white rounded-[24px] font-black text-xs uppercase border-none active:bg-slate-800">SIGUIENTE</button>
-                                            </div>
-                                        )}
-                                        {modalStep === 'note' && (<div className="text-left"><h2 className="texto-titulo text-xl mb-6 text-center text-slate-800 text-left">Concepto</h2><textarea value={formGasto.nota} onChange={e => setFormGasto({...formGasto, nota: e.target.value})} className="w-full bg-slate-50 p-6 rounded-3xl h-32 outline-none border-none text-lg font-bold resize-none text-slate-800" placeholder="Nota rápida..."></textarea><button onClick={handleFinalizarGasto} className="w-full py-5 bg-green-600 text-white rounded-[24px] font-black text-xs uppercase mt-6 border-none active:bg-green-700">FINALIZAR</button></div>)}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {showConfirmDelete && (
-                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-                            <div className="bg-white w-full max-w-xs p-8 rounded-[2.5rem] text-center shadow-2xl">
-                                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="alert-triangle"></i></div>
-                                <h2 className="text-xl font-black mb-2 text-slate-800">¡Atención!</h2>
-                                <p className="text-slate-500 text-sm mb-8 leading-tight">
-                                    {modalType === 'edit_p' ? 'Si pulsas en la opción "Eliminar" perderás el presupuesto y toda la información asociada.' : 
-                                     modalType === 'edit_s' ? 'Si pulsas en la opción "Eliminar" perderás la planificación y toda la información asociada.' :
-                                     'Si pulsas en la opción "Eliminar" perderás el gasto y toda la información asociada.'}
-                                </p>
-                                <div className="flex flex-col gap-2">
-                                    <button onClick={modalType === 'edit_p' ? handleDeletePresupuesto : modalType === 'edit_s' ? handleDeletePlanificacion : handleDeleteGasto} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black text-[0.625rem] uppercase tracking-widest border-none">
-                                        {modalType === 'edit_p' ? 'Eliminar presupuesto' : modalType === 'edit_s' ? 'Eliminar planificación' : 'Eliminar gasto'}
-                                    </button>
-                                    <button onClick={() => setShowConfirmDelete(false)} className="w-full py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-[0.625rem] uppercase tracking-widest border-none">Cancelar</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+        {/* 3. GASTOS DIRECTOS — agrupados por fecha */}
+        {(budget.directMovs || []).length > 0 && (() => {
+          // Ordenar por fecha desc y agrupar
+          const sorted = [...budget.directMovs].sort((a, b) => b.date.localeCompare(a.date));
+          const groups = [];
+          sorted.forEach(mov => {
+            const last = groups[groups.length - 1];
+            if (last && last.date === mov.date) { last.movs.push(mov); }
+            else { groups.push({ date: mov.date, movs: [mov] }); }
+          });
+          return (
+            <>
+              <div className="section-label" style={{ marginTop: budget.plans.length > 0 ? '0.5rem' : 0 }}>
+                Gastos directos
+              </div>
+              {groups.map(group => (
+                <div key={group.date} className="date-group">
+                  {/* Separador de fecha */}
+                  <div className="date-separator">
+                    <span className="date-sep-label">{fmtDate(group.date)}</span>
+                    <span className="date-sep-total">-{fmt(group.movs.reduce((s, m) => s + m.amount, 0))}</span>
+                  </div>
+                  {/* Cards del grupo */}
+                  {group.movs.map(mov => (
+                    <div key={mov.id} className="plan-card" style={{ marginBottom: '0.5rem' }}>
+                      <div className="plan-icon" style={{ background: palette.hex, color: iconColor }}>
+                        {ICONS[mov.icon] || ICONS[budget.icon] || ICONS.star}
+                      </div>
+                      <div className="plan-body">
+                        <div className="plan-name">{mov.name}</div>
+                        <div className="mov-category">{mov.category || '—'}</div>
+                      </div>
+                      <div className="plan-right">
+                        <span className="plan-amount">{fmt(mov.amount)}</span>
+                        <button className="plan-edit" onClick={() => onEditGasto(mov)}><PencilIcon /></button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-            );
-        };
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+              ))}
+            </>
+          );
+        })()}
+
+        {/* VACÍO */}
+        {budget.plans.length === 0 && (budget.directMovs || []).length === 0 && (
+          <div className="empty-state">
+            <div className="empty-icon" style={{ background: iconBg }}>
+              <span style={{ color: iconColor }}>{ICONS[budget.icon]}</span>
+            </div>
+            <div className="empty-title">Sin movimientos aún</div>
+            <div className="empty-sub">Añade una planificación para organizar los gastos, o registra un gasto directo.</div>
+          </div>
+        )}
+      </div>
+
+      {/* FOOTER */}
+      <div className="detail-footer">
+        {(!hasPlans && !hasDirectMovs) ? (
+          <>
+            <span className="detail-footer-label">Añadir</span>
+            <div className="detail-footer-btns">
+              <button className="btn btn-outline" onClick={onAddPlan}>Planificación</button>
+              <button className="btn btn-primary" onClick={onAddGasto}>Gasto</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <button className="btn-add" onClick={onAddPlan}><PlusIcon /></button>
+            <span className="btn-add-label">Añadir planificación</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ── PANTALLA GASTOS (nivel 3: dentro de una planificación) ── */
+const GastosScreen = ({ budget, plan, isDirectMode, onBack, onAddGasto, onEditGasto }) => {
+  const palette      = PALETTE.find(p => p.id === budget.color) || PALETTE[1];
+  const iconColor    = palette.dark ? '#FFFFFF' : '#0D0D55';
+  const progressColor = palette.hex;
+
+  const planSpent = plan.movs.reduce((a, m) => a + m.amount, 0);
+  const resta     = plan.budget - planSpent;
+  const pct       = Math.min(100, Math.round((planSpent / plan.budget) * 100));
+
+  // Agrupar movimientos por fecha desc
+  const sorted = [...plan.movs].sort((a, b) => b.date.localeCompare(a.date));
+  const groups = [];
+  sorted.forEach(mov => {
+    const last = groups[groups.length - 1];
+    if (last && last.date === mov.date) last.movs.push(mov);
+    else groups.push({ date: mov.date, movs: [mov] });
+  });
+
+  return (
+    <div className="detail-screen">
+
+      {/* HEADER neutro — zona gastos */}
+      <div className="gastos-header">
+        <div className="gastos-header-top">
+          <button className="btn-back-neutral" onClick={onBack}><BackIcon /></button>
+          <div className="gastos-header-titles">
+            {!isDirectMode && <div className="gastos-header-parent">{budget.name}</div>}
+            <div className="gastos-header-name">{plan.name}</div>
+          </div>
+        </div>
+        <div className="gastos-balance">
+          <div className="gastos-balance-item">
+            <span className="gastos-balance-label">Total</span>
+            <span className="gastos-balance-value">{fmt(plan.budget)}</span>
+          </div>
+          <div className="gastos-balance-item">
+            <span className="gastos-balance-label">Gastado</span>
+            <span className="gastos-balance-value">{fmt(planSpent)}</span>
+          </div>
+          <div className="gastos-balance-item">
+            <span className="gastos-balance-label">Disponible</span>
+            <span className="gastos-balance-value-big">{fmt(resta)}</span>
+            <div className="gastos-progress-bg">
+              <div className="gastos-progress-fill" style={{ width:`${pct}%`, background: progressColor }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTENIDO */}
+      <div className="detail-content">
+        {groups.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon" style={{ background: palette.hex + '33' }}>
+              <span style={{ color: iconColor }}>{ICONS[budget.icon]}</span>
+            </div>
+            <div className="empty-title">Sin gastos aún</div>
+            <div className="empty-sub">Pulsa "Gasto" para registrar el primer movimiento en esta planificación.</div>
+          </div>
+        ) : (
+          <>
+            <div className="section-label">Gastos</div>
+            {groups.map(group => (
+              <div key={group.date} className="date-group">
+                <div className="date-separator">
+                  <span className="date-sep-label">{fmtDate(group.date)}</span>
+                  <span className="date-sep-total">-{fmt(group.movs.reduce((s, m) => s + m.amount, 0))}</span>
+                </div>
+                {group.movs.map(mov => (
+                  <div key={mov.id} className="plan-card" style={{ marginBottom:'0.5rem' }}>
+                    <div className="plan-icon" style={{ background: palette.hex, color: iconColor }}>
+                      {ICONS[mov.icon] || ICONS[budget.icon] || ICONS.star}
+                    </div>
+                    <div className="plan-body">
+                      <div className="plan-name">{mov.name}</div>
+                      <div className="mov-category">{mov.category || '—'}</div>
+                    </div>
+                    <div className="plan-right">
+                      <span className="plan-amount">{fmt(mov.amount)}</span>
+                      <button className="plan-edit" onClick={() => onEditGasto(mov)}><PencilIcon /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
+      {/* FOOTER */}
+      <div className="detail-footer">
+        <button className="btn-add" onClick={onAddGasto}><PlusIcon /></button>
+        <span className="btn-add-label">Añadir gasto</span>
+      </div>
+    </div>
+  );
+};
+
+/* ── UTILS FECHA ── */
+const todayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+const yesterdayStr = () => {
+  const d = new Date(); d.setDate(d.getDate()-1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
+
+/* ── MODAL GASTO ── */
+const ModalGasto = ({ budget, mov: editMov, onSave, onDelete, onClose }) => {
+  const isEdit   = !!editMov;
+  const palette  = PALETTE.find(p => p.id === budget.color) || PALETTE[1];
+  const [step, setStep]     = useState('importe');
+  const [amount, setAmount] = useState(isEdit ? String(editMov.amount) : '0');
+  const [name, setName]     = useState(isEdit ? editMov.name : '');
+  const [date, setDate]     = useState(isEdit ? editMov.date : todayStr());
+  const [customDate, setCustomDate] = useState(isEdit);
+  const [icon, setIcon]         = useState(isEdit ? editMov.icon : (ICON_GROUPS.find(g => g.label === (ICON_CONTEXT[budget.icon] || 'Otros'))?.keys[0] || 'star'));
+  const [category, setCategory] = useState(isEdit ? (editMov.category || 'Hogar') : (ICON_CONTEXT[budget.icon] || 'Otros'));
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const pressCalc = (n) => setAmount(prev => prev === '0' ? String(n) : prev.length > 8 ? prev : prev + n);
+  const backCalc  = () => setAmount(prev => prev.length <= 1 ? '0' : prev.slice(0, -1));
+
+  const handleSave = () => {
+    onSave({
+      id: isEdit ? editMov.id : Date.now(),
+      name: name || 'Sin nombre',
+      amount: parseInt(amount) || 0,
+      date,
+      icon,
+      category,
+      color: budget.color,
+    });
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-sheet">
+
+        {/* HEADER */}
+        <div className="modal-header">
+          <div className="modal-title">
+            {step === 'importe'
+              ? (isEdit ? 'Editar importe' : '¿Cuánto has gastado?')
+              : (isEdit ? 'Editar gasto' : 'Detalle del gasto')}
+          </div>
+          <button className="modal-close" onClick={onClose}><CloseIcon /></button>
+        </div>
+
+        {/* CONTENT */}
+        <div className="modal-content">
+          {step === 'importe' && (
+            <>
+              <div className="amount-display">
+                <div className="amount-display-label">Importe</div>
+                <div className="amount-display-value">{fmt(amount)}</div>
+              </div>
+              <div className="calc-grid">
+                {[1,2,3,4,5,6,7,8,9].map(n => (
+                  <button key={n} className="calc-btn" onClick={() => pressCalc(n)}>{n}</button>
+                ))}
+                <button className="calc-btn calc-clear" onClick={() => setAmount('0')}>C</button>
+                <button className="calc-btn" onClick={() => pressCalc(0)}>0</button>
+                <button className="calc-btn" onClick={backCalc}><BackspaceIcon /></button>
+              </div>
+            </>
+          )}
+
+          {step === 'detalle' && (
+            <>
+              <div className="field">
+                <label className="field-label">Descripción</label>
+                <input className="field-input" placeholder="Ej. Vuelos, Cena, Gasolina…"
+                  value={name} onChange={e => setName(e.target.value)} autoFocus />
+              </div>
+
+              <div className="field">
+                <label className="field-label">Fecha</label>
+                <div className="date-row">
+                  <button className={`date-btn ${date === todayStr() && !customDate ? 'selected' : ''}`}
+                    onClick={() => { setDate(todayStr()); setCustomDate(false); }}>Hoy</button>
+                  <button className={`date-btn ${date === yesterdayStr() && !customDate ? 'selected' : ''}`}
+                    onClick={() => { setDate(yesterdayStr()); setCustomDate(false); }}>Ayer</button>
+                  <input type="date" className={`field-input date-btn ${customDate ? 'selected' : ''}`}
+                    style={{ flex: 2 }} value={date}
+                    onChange={e => { setDate(e.target.value); setCustomDate(true); }} />
+                </div>
+              </div>
+
+              {/* Preview icono */}
+              <div style={{ display:'flex', alignItems:'center', gap:'0.75rem',
+                background:'var(--bg-muted)', borderRadius:'var(--r-md)', padding:'0.75rem 1rem' }}>
+                <div style={{ width:'2.5rem', height:'2.5rem', borderRadius:'var(--r-md)',
+                  background: palette.hex, color: palette.dark ? '#fff' : '#0D0D55',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  padding:'0.4rem', flexShrink: 0 }}>
+                  {ICONS[icon] || ICONS.star}
+                </div>
+                <div>
+                  <div style={{ fontSize:'0.5625rem', letterSpacing:'0.1em',
+                    textTransform:'uppercase', color:'var(--text-muted)' }}>Icono · Categoría</div>
+                  <div style={{ fontSize:'0.9375rem', color:'var(--text)' }}>{icon} · {category}</div>
+                </div>
+              </div>
+
+              {/* Selector de categoría */}
+              <label className="field-label">Categoría</label>
+              <div className="icon-category-pills" style={{marginBottom:'0.25rem'}}>
+                {ICON_GROUPS.map(g => (
+                  <button key={g.label}
+                    className={`icon-cat-pill ${category === g.label ? 'active' : ''}`}
+                    onClick={() => { setCategory(g.label); setIcon(g.keys[0]); }}>
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Iconos del grupo seleccionado */}
+              <label className="field-label">Icono</label>
+              <div className="icon-grid-group">
+                {(ICON_GROUPS.find(g => g.label === category) || ICON_GROUPS[0]).keys.map(k => (
+                  <button key={k} className={`icon-opt ${icon === k ? 'selected' : ''}`}
+                    onClick={() => setIcon(k)} title={k}>
+                    {ICONS[k]}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* FOOTER */}
+        <div className="modal-footer">
+          {step === 'importe' && (
+            <button className="btn btn-primary"
+              onClick={() => parseInt(amount) > 0 && setStep('detalle')}
+              style={{ opacity: parseInt(amount) > 0 ? 1 : 0.4 }}>
+              Siguiente
+            </button>
+          )}
+          {step === 'detalle' && (
+            <>
+              <button className="btn btn-primary" onClick={handleSave}>Guardar gasto</button>
+              <button className="btn btn-outline" onClick={() => setStep('importe')}>← Cambiar importe</button>
+              {isEdit && (
+                <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>Eliminar gasto</button>
+              )}
+            </>
+          )}
+        </div>
+
+      </div>
+
+      {/* Confirmación eliminar gasto */}
+      {confirmDelete && (
+        <div className="modal-overlay" style={{ zIndex: 300 }}
+          onClick={e => e.target === e.currentTarget && setConfirmDelete(false)}>
+          <div className="modal-sheet">
+            <div className="modal-content" style={{ alignItems:'center', textAlign:'center', padding:'2rem 1.5rem 0' }}>
+              <div style={{
+                width:'4rem', height:'4rem', borderRadius:'var(--r-md)',
+                background:'var(--navy)', display:'flex', alignItems:'center', justifyContent:'center',
+                marginBottom:'1rem',
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="#fff" style={{width:28,height:28}}>
+                  <path d="M236.8,188.09,149.35,36.22a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"/>
+                </svg>
+              </div>
+              <div style={{ fontSize:'1.5rem', color:'var(--text)', letterSpacing:'-0.03em', marginBottom:'0.75rem' }}>
+                ¡Atención!
+              </div>
+              <div style={{ fontSize:'0.9375rem', color:'var(--text-muted)', lineHeight:1.5, maxWidth:'22ch', margin:'0 auto' }}>
+                Si pulsas en "Eliminar" perderás este gasto y no podrás recuperarlo.
+              </div>
+            </div>
+            <div className="modal-footer" style={{ gap:'0.5rem' }}>
+              <button className="btn btn-primary"
+                style={{ background:'var(--navy)' }}
+                onClick={() => onDelete(editMov.id)}>
+                Eliminar
+              </button>
+              <button className="btn" style={{
+                background:'transparent', color:'var(--text-muted)',
+                fontSize:'0.75rem', letterSpacing:'0.05em', textTransform:'uppercase',
+              }}
+                onClick={() => setConfirmDelete(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+/* ── MODAL PLANIFICACIÓN ── */
+const ModalPlan = ({ plan, budget, onSave, onDelete, onClose }) => {
+  const isEdit = !!plan;
+  const [name, setName]         = useState(isEdit ? plan.name : '');
+  const [amount, setAmount]     = useState(isEdit ? String(plan.budget) : '0');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const contextGroup = ICON_CONTEXT[budget?.icon] || 'Viajes';
+  const [iconGroup, setIconGroup] = useState(isEdit ? (ICON_CONTEXT[plan.icon] || contextGroup) : contextGroup);
+  const [icon, setIcon]           = useState(isEdit ? (plan.icon || 'plane') : (ICON_GROUPS.find(g => g.label === contextGroup)?.keys[0] || 'plane'));
+
+  const pressCalc = (n) => setAmount(prev => prev === '0' ? String(n) : prev.length > 7 ? prev : prev + n);
+  const backCalc  = () => setAmount(prev => prev.length <= 1 ? '0' : prev.slice(0, -1));
+
+  const handleSave = () => {
+    onSave({
+      id: isEdit ? plan.id : Date.now(),
+      name: name || 'Sin nombre',
+      budget: parseInt(amount) || 0,
+      icon,
+      movs: isEdit ? plan.movs : [],
+    });
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-sheet">
+
+        <div className="modal-header">
+          <div className="modal-title">{isEdit ? 'Editar planificación' : 'Nueva planificación'}</div>
+          <button className="modal-close" onClick={onClose}><CloseIcon /></button>
+        </div>
+
+        <div className="modal-content">
+          <div className="field">
+            <label className="field-label">Nombre</label>
+            <input className="field-input" placeholder="Ej. Verano, Enero, Reformas…"
+              value={name} onChange={e => setName(e.target.value)} autoFocus />
+          </div>
+          <div className="amount-display">
+            <div className="amount-display-label">Importe</div>
+            <div className="amount-display-value">{fmt(amount)}</div>
+          </div>
+          <div className="calc-grid">
+            {[1,2,3,4,5,6,7,8,9].map(n => (
+              <button key={n} className="calc-btn" onClick={() => pressCalc(n)}>{n}</button>
+            ))}
+            <button className="calc-btn calc-clear" onClick={() => setAmount('0')}>C</button>
+            <button className="calc-btn" onClick={() => pressCalc(0)}>0</button>
+            <button className="calc-btn" onClick={backCalc}><BackspaceIcon /></button>
+          </div>
+
+          <label className="field-label">Categoría</label>
+          <div className="icon-category-pills" style={{marginBottom:'0.25rem'}}>
+            {ICON_GROUPS.map(g => (
+              <button key={g.label}
+                className={`icon-cat-pill ${iconGroup === g.label ? 'active' : ''}`}
+                onClick={() => { setIconGroup(g.label); setIcon(g.keys[0]); }}>
+                {g.label}
+              </button>
+            ))}
+          </div>
+          <label className="field-label">Icono</label>
+          <div className="icon-grid-group">
+            {(ICON_GROUPS.find(g => g.label === iconGroup) || ICON_GROUPS[0]).keys.map(k => (
+              <button key={k} className={`icon-opt ${icon === k ? 'selected' : ''}`}
+                onClick={() => setIcon(k)}>
+                {ICONS[k]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn btn-primary" onClick={handleSave}>
+            {isEdit ? 'Guardar cambios' : 'Crear planificación'}
+          </button>
+          {isEdit && (
+            <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>
+              Eliminar planificación
+            </button>
+          )}
+        </div>
+
+      </div>
+
+      {confirmDelete && (
+        <div className="modal-overlay" style={{ zIndex: 300 }}
+          onClick={e => e.target === e.currentTarget && setConfirmDelete(false)}>
+          <div className="modal-sheet">
+            <div className="modal-content" style={{ alignItems:'center', textAlign:'center', padding:'2rem 1.5rem 0' }}>
+              <div style={{ width:'4rem', height:'4rem', borderRadius:'var(--r-md)',
+                background:'var(--navy)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:'1rem' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="#fff" style={{width:28,height:28}}>
+                  <path d="M236.8,188.09,149.35,36.22a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"/>
+                </svg>
+              </div>
+              <div style={{ fontSize:'1.5rem', color:'var(--text)', letterSpacing:'-0.03em', marginBottom:'0.75rem' }}>¡Atención!</div>
+              <div style={{ fontSize:'0.9375rem', color:'var(--text-muted)', lineHeight:1.5, maxWidth:'22ch', margin:'0 auto' }}>
+                Si pulsas "Eliminar" perderás esta planificación y todos sus gastos.
+              </div>
+            </div>
+            <div className="modal-footer" style={{ gap:'0.5rem' }}>
+              <button className="btn btn-primary" style={{ background:'var(--navy)' }}
+                onClick={() => onDelete(plan.id)}>Eliminar</button>
+              <button className="btn" style={{ background:'transparent', color:'var(--text-muted)',
+                fontSize:'0.75rem', letterSpacing:'0.05em', textTransform:'uppercase' }}
+                onClick={() => setConfirmDelete(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── MODAL NUEVO / EDITAR PRESUPUESTO ── */
+const ModalPresupuesto = ({ item, onSave, onDelete, onClose }) => {
+  const isEdit = !!item;
+  const [step, setStep] = useState(isEdit ? 'config' : 'importe');
+  const [amount, setAmount] = useState(isEdit ? String(item.budget) : '0');
+  const [name, setName]   = useState(isEdit ? item.name  : '');
+  const [color, setColor] = useState(isEdit ? item.color : 'blue');
+  const [icon, setIcon]       = useState(isEdit ? item.icon  : 'plane');
+  const [iconGroup, setIconGroup] = useState(isEdit ? (ICON_CONTEXT[item.icon] || 'Viajes') : 'Viajes');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const pressCalc = (n) => setAmount(prev => prev === '0' ? String(n) : prev.length > 7 ? prev : prev + n);
+  const backCalc  = () => setAmount(prev => prev.length <= 1 ? '0' : prev.slice(0, -1));
+
+  const handleSave = () => {
+    const b = parseInt(amount) || 0;
+    onSave({
+      ...item,
+      id: item?.id || Date.now(),
+      name: name || 'Sin nombre',
+      icon, color, budget: b,
+      spent: item?.spent || 0,
+      plans: item?.plans || [],
+      directMovs: item?.directMovs || [],
+    });
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-sheet">
+
+        {/* HEADER */}
+        <div className="modal-header">
+          <div className="modal-title">
+            {step === 'importe' ? '¿Cuánto presupuesto?' : (isEdit ? 'Editar presupuesto' : 'Nuevo presupuesto')}
+          </div>
+          <button className="modal-close" onClick={onClose}><CloseIcon /></button>
+        </div>
+
+        {/* CONTENT */}
+        <div className="modal-content">
+          {step === 'importe' && (
+            <>
+              <div className="amount-display">
+                <div className="amount-display-label">Importe</div>
+                <div className="amount-display-value">{fmt(amount)}</div>
+              </div>
+              <div className="calc-grid">
+                {[1,2,3,4,5,6,7,8,9].map(n => (
+                  <button key={n} className="calc-btn" onClick={() => pressCalc(n)}>{n}</button>
+                ))}
+                <button className="calc-btn calc-clear" onClick={() => setAmount('0')}>C</button>
+                <button className="calc-btn" onClick={() => pressCalc(0)}>0</button>
+                <button className="calc-btn" onClick={backCalc}><BackspaceIcon /></button>
+              </div>
+            </>
+          )}
+
+          {step === 'config' && (
+            <>
+              <div className="field">
+                <label className="field-label">Nombre</label>
+                <input className="field-input" placeholder="Ej. Vacaciones, Coche…"
+                  value={name} onChange={e => setName(e.target.value)} autoFocus />
+              </div>
+              {isEdit && (
+                <div className="field">
+                  <label className="field-label">Presupuesto</label>
+                  <input className="field-input" type="number" value={amount}
+                    onChange={e => setAmount(e.target.value)} />
+                </div>
+              )}
+              <label className="color-label">Color</label>
+              <div className="color-grid">
+                {PALETTE.map(p => (
+                  <button key={p.id} className={`color-dot ${color === p.id ? 'selected' : ''}`}
+                    style={{ background: p.hex, border: p.id === 'white' ? '1px solid #E2E2DC' : 'none' }}
+                    onClick={() => setColor(p.id)} />
+                ))}
+              </div>
+              <label className="color-label">Icono</label>
+              <div className="modal-content" style={{padding:0, gap:'0.625rem', maxHeight:'none', overflow:'visible'}}>
+                <div className="icon-category-pills">
+                  {ICON_GROUPS.map(g => (
+                    <button key={g.label}
+                      className={`icon-cat-pill ${iconGroup === g.label ? 'active' : ''}`}
+                      onClick={() => { setIconGroup(g.label); setIcon(ICON_GROUPS.find(x=>x.label===g.label).keys[0]); }}>
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="icon-grid-group" style={{marginTop:'0.25rem'}}>
+                  {(ICON_GROUPS.find(g => g.label === iconGroup) || ICON_GROUPS[0]).keys.map(k => (
+                    <button key={k} className={`icon-opt ${icon === k ? 'selected' : ''}`} onClick={() => setIcon(k)}>
+                      {ICONS[k]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* FOOTER */}
+        <div className="modal-footer">
+          {step === 'importe' && (
+            <button className="btn btn-primary" onClick={() => setStep('config')}>Siguiente</button>
+          )}
+          {step === 'config' && (
+            <>
+              <button className="btn btn-primary" onClick={handleSave}>
+                {isEdit ? 'Guardar cambios' : 'Crear presupuesto'}
+              </button>
+              {isEdit && (
+                <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>
+                  Eliminar presupuesto
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+      </div>
+
+      {/* Modal de confirmación de eliminación */}
+      {confirmDelete && (
+        <div className="modal-overlay" style={{ zIndex: 300 }}
+          onClick={e => e.target === e.currentTarget && setConfirmDelete(false)}>
+          <div className="modal-sheet" style={{ maxHeight: 'auto', paddingBottom: 0 }}>
+            <div className="modal-content" style={{ alignItems:'center', textAlign:'center', padding:'2rem 1.5rem 0' }}>
+              {/* Icono advertencia */}
+              <div style={{
+                width:'4rem', height:'4rem', borderRadius:'var(--r-md)',
+                background:'var(--navy)', display:'flex', alignItems:'center', justifyContent:'center',
+                marginBottom:'1rem',
+              }}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="#fff" style={{width:28,height:28}}>
+                  <path d="M236.8,188.09,149.35,36.22a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"/>
+                </svg>
+              </div>
+              <div style={{ fontSize:'1.5rem', color:'var(--text)', letterSpacing:'-0.03em', marginBottom:'0.75rem' }}>
+                ¡Atención!
+              </div>
+              <div style={{ fontSize:'0.9375rem', color:'var(--text-muted)', lineHeight:1.5, maxWidth:'22ch', margin:'0 auto' }}>
+                Si pulsas en la opción "Eliminar" perderás el presupuesto y toda la información asociada.
+              </div>
+            </div>
+            <div className="modal-footer" style={{ gap:'0.5rem' }}>
+              <button className="btn btn-primary"
+                style={{ background:'var(--navy)' }}
+                onClick={() => onDelete(item.id)}>
+                Eliminar
+              </button>
+              <button className="btn" style={{
+                background:'transparent', color:'var(--text-muted)',
+                fontSize:'0.75rem', letterSpacing:'0.05em', textTransform:'uppercase',
+              }}
+                onClick={() => setConfirmDelete(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+/* ── APP ── */
+const App = () => {
+  const [data, setData]         = useState(INITIAL_DATA);
+  const [year, setYear]         = useState('2026');
+  const [yearOpen, setYearOpen] = useState(false);
+  const [exportOk, setExportOk] = useState(false);
+  const [modal, setModal]           = useState(null);
+  const [detail, setDetail]         = useState(null);
+  const [planDetail, setPlanDetail] = useState(null);
+  const [modalGasto, setModalGasto] = useState(false);
+  const [editGasto, setEditGasto]   = useState(null);
+  const [modalPlan, setModalPlan]   = useState(null); // null | 'new' | plan object
+
+  const budgets     = data[year] || [];
+  const isFirstTime = Object.values(data).every(arr => arr.length === 0);
+
+  const yearRef = useRef(null);
+  useEffect(() => {
+    const handler = e => { if (yearRef.current && !yearRef.current.contains(e.target)) setYearOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleExport = () => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `MarGen_${year}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setExportOk(true);
+    setTimeout(() => setExportOk(false), 2000);
+  };
+
+  const handleSave = (item) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const exists = list.find(b => b.id === item.id);
+      const updated = exists ? list.map(b => b.id === item.id ? item : b) : [...list, item];
+      return { ...prev, [year]: updated };
+    });
+    // Si editamos desde el detalle, actualizamos detail también
+    if (detail && item.id === detail.id) setDetail(item);
+    setModal(null);
+  };
+
+  const handleDelete = (id) => {
+    setData(prev => ({ ...prev, [year]: (prev[year] || []).filter(b => b.id !== id) }));
+    setModal(null);
+    setDetail(null);
+  };
+
+  const handleSaveGasto = (mov) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const updated = list.map(b => {
+        if (b.id !== detail.id) return b;
+        return { ...b, directMovs: [...(b.directMovs || []), mov] };
+      });
+      return { ...prev, [year]: updated };
+    });
+    setModalGasto(false);
+  };
+
+  const handleUpdateGasto = (mov) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const updated = list.map(b => {
+        if (b.id !== detail.id) return b;
+        return { ...b, directMovs: (b.directMovs || []).map(m => m.id === mov.id ? mov : m) };
+      });
+      return { ...prev, [year]: updated };
+    });
+    setEditGasto(null);
+  };
+
+  const handleDeleteGasto = (movId) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const updated = list.map(b => {
+        if (b.id !== detail.id) return b;
+        return { ...b, directMovs: (b.directMovs || []).filter(m => m.id !== movId) };
+      });
+      return { ...prev, [year]: updated };
+    });
+    setEditGasto(null);
+  };
+
+  // Handlers para planificaciones
+  const handleSavePlan = (plan) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const updated = list.map(b => {
+        if (b.id !== detail.id) return b;
+        const exists = b.plans.find(p => p.id === plan.id);
+        const plans = exists ? b.plans.map(p => p.id === plan.id ? plan : p) : [...b.plans, plan];
+        return { ...b, plans };
+      });
+      return { ...prev, [year]: updated };
+    });
+    setModalPlan(null);
+  };
+
+  const handleDeletePlan = (planId) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const updated = list.map(b => {
+        if (b.id !== detail.id) return b;
+        return { ...b, plans: b.plans.filter(p => p.id !== planId) };
+      });
+      return { ...prev, [year]: updated };
+    });
+    setModalPlan(null);
+  };
+
+  // Handlers para gastos DENTRO de planificación
+  const handleSavePlanGasto = (mov) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const updated = list.map(b => {
+        if (b.id !== detail.id) return b;
+        return { ...b, plans: b.plans.map(p =>
+          p.id !== planDetail.id ? p : { ...p, movs: [...p.movs, mov] }
+        )};
+      });
+      return { ...prev, [year]: updated };
+    });
+    // Sincronizar planDetail
+    setPlanDetail(prev => ({ ...prev, movs: [...prev.movs, mov] }));
+    setModalGasto(false);
+  };
+
+  const handleUpdatePlanGasto = (mov) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const updated = list.map(b => {
+        if (b.id !== detail.id) return b;
+        return { ...b, plans: b.plans.map(p =>
+          p.id !== planDetail.id ? p : { ...p, movs: p.movs.map(m => m.id === mov.id ? mov : m) }
+        )};
+      });
+      return { ...prev, [year]: updated };
+    });
+    setPlanDetail(prev => ({ ...prev, movs: prev.movs.map(m => m.id === mov.id ? mov : m) }));
+    setEditGasto(null);
+  };
+
+  const handleDeletePlanGasto = (movId) => {
+    setData(prev => {
+      const list = prev[year] || [];
+      const updated = list.map(b => {
+        if (b.id !== detail.id) return b;
+        return { ...b, plans: b.plans.map(p =>
+          p.id !== planDetail.id ? p : { ...p, movs: p.movs.filter(m => m.id !== movId) }
+        )};
+      });
+      return { ...prev, [year]: updated };
+    });
+    setPlanDetail(prev => ({ ...prev, movs: prev.movs.filter(m => m.id !== movId) }));
+    setEditGasto(null);
+  };
+
+  // PANTALLA GASTOS — dentro de una planificación
+  if (planDetail && detail) {
+    const liveBudget = (data[year] || []).find(b => b.id === detail.id) || detail;
+    return (
+      <div className="app-shell">
+        <GastosScreen
+          budget={liveBudget}
+          plan={planDetail}
+          onBack={() => setPlanDetail(null)}
+          onAddGasto={() => setModalGasto(true)}
+          onEditGasto={mov => setEditGasto(mov)}
+        />
+        {modalGasto && (
+          <ModalGasto
+            budget={liveBudget}
+            onSave={handleSavePlanGasto}
+            onClose={() => setModalGasto(false)}
+          />
+        )}
+        {editGasto && (
+          <ModalGasto
+            budget={liveBudget}
+            mov={editGasto}
+            onSave={handleUpdatePlanGasto}
+            onDelete={handleDeletePlanGasto}
+            onClose={() => setEditGasto(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Si hay pantalla de detalle abierta, renderizamos esa
+  if (detail) {
+    // Sincronizamos con data por si se editó
+    const live = (data[year] || []).find(b => b.id === detail.id) || detail;
+    return (
+      <div className="app-shell">
+        <DetailScreen
+          budget={live}
+          year={year}
+          onBack={() => setDetail(null)}
+          onEditBudget={item => setModal(item)}
+          onAddGasto={() => setModalGasto(true)}
+          onEditGasto={mov => setEditGasto(mov)}
+          onOpenPlan={plan => setPlanDetail(plan)}
+          onAddPlan={() => setModalPlan('new')}
+          onEditPlan={plan => setModalPlan(plan)}
+        />
+        {modalGasto && (
+          <ModalGasto
+            budget={live}
+            onSave={handleSaveGasto}
+            onClose={() => setModalGasto(false)}
+          />
+        )}
+        {editGasto && (
+          <ModalGasto
+            budget={live}
+            mov={editGasto}
+            onSave={handleUpdateGasto}
+            onDelete={handleDeleteGasto}
+            onClose={() => setEditGasto(null)}
+          />
+        )}
+        {modalPlan && (
+          <ModalPlan
+            plan={modalPlan === 'new' ? null : modalPlan}
+            budget={live}
+            onSave={handleSavePlan}
+            onDelete={handleDeletePlan}
+            onClose={() => setModalPlan(null)}
+          />
+        )}
+        {modal && (
+          <ModalPresupuesto
+            item={modal === 'new' ? null : modal}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onClose={() => setModal(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Primera vez — welcome a pantalla completa sin header ni footer
+  if (isFirstTime) {
+    return (
+      <div className="app-shell">
+        <div className="content content-welcome">
+          <div className="welcome-screen">
+            <div className="welcome-top">
+              <div className="w-shape w-s1"></div>
+              <div className="w-shape w-s2"></div>
+              <div className="w-shape w-s3"></div>
+              <div className="w-shape w-s4"></div>
+              <div className="w-shape w-s5"></div>
+              <div className="welcome-logo-nav">
+                <span className="wl-m">Mar</span><span className="wl-g">Gen</span>
+              </div>
+              <svg className="welcome-wave" viewBox="0 0 390 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,0 L0,24 C100,48 290,0 390,24 L390,48 L0,48 Z" fill="#ffffff"/>
+              </svg>
+            </div>
+            <div className="welcome-bottom">
+              <div className="welcome-bottom-text">
+                <div className="welcome-w-line"></div>
+                <div className="welcome-w-title">Bienvenido<br/>a MarGen</div>
+                <div className="welcome-w-sub">Tu app para planificar y controlar presupuestos. Crea tu primer presupuesto y empieza a tener el control.</div>
+              </div>
+              <div className="welcome-bottom-cta">
+                <button className="btn-add" onClick={() => setModal('new')}><PlusIcon /></button>
+                <span className="btn-add-label">Crear presupuesto</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {modal && (
+          <ModalPresupuesto
+            item={null}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onClose={() => setModal(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-shell">
+      <header className="header">
+        <div className="year-selector" ref={yearRef}>
+          <div className="year-pill" onClick={() => setYearOpen(o => !o)}>
+            <span className="year-number">{year}</span>
+            <span className={`year-chevron ${yearOpen ? 'open' : ''}`}><ChevronDown /></span>
+          </div>
+          {yearOpen && (
+            <div className="year-dropdown">
+              {YEARS.map(y => (
+                <div key={y} className={`year-option ${y === year ? 'active' : ''}`}
+                  onClick={() => { setYear(y); setYearOpen(false); }}>
+                  <span>{y}</span>
+                  {y === year && <span className="year-check"><CheckIcon /></span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="header-actions">
+          <button className={`icon-btn ${exportOk ? 'success' : ''}`} onClick={handleExport}>
+            {exportOk ? <CheckIcon /> : <DownloadIcon />}
+          </button>
+        </div>
+      </header>
+
+      <div className="content">
+        {budgets.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon"><WalletIcon /></div>
+            <div className="empty-title">Sin presupuestos en {year}</div>
+            <div className="empty-sub">Pulsa el botón + para añadir un presupuesto en {year}.</div>
+          </div>
+        ) : (
+          budgets.map((b, i) => (
+            <BudgetCard key={b.id} item={b}
+              onOpen={item => setDetail(item)}
+              onEdit={item => setModal(item)}
+              style={{ delay: `${i * 60}ms` }} />
+          ))
+        )}
+      </div>
+
+      <div className="footer">
+        <button className="btn-add" onClick={() => setModal('new')}><PlusIcon /></button>
+        <span className="btn-add-label">Añadir</span>
+      </div>
+
+      {modal && (
+        <ModalPresupuesto
+          item={modal === 'new' ? null : modal}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onClose={() => setModal(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+// Re-trigger Phosphor icon rendering after React mounts
+setTimeout(() => {
+  if (window.PhosphorIcons) window.PhosphorIcons.replace();
+}, 100);
+</script>
 </body>
 </html>
