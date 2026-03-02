@@ -229,6 +229,67 @@
     }
     .icon-btn svg { width: 18px; height: 18px; }
 
+    /* ── MENÚ HAMBURGUESA ── */
+    .hamburger-wrap {
+      position: relative;
+    }
+    /* Overlay oscuro detrás del sidebar */
+    .sidebar-overlay {
+      position: fixed; inset: 0;
+      background: rgba(13,13,85,0.35);
+      backdrop-filter: blur(3px);
+      z-index: 300;
+      animation: fadeIn 220ms ease both;
+    }
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 72%;
+      max-width: 280px;
+      background: var(--bg-card);
+      z-index: 301;
+      display: flex; flex-direction: column;
+      padding-top: env(safe-area-inset-top);
+      box-shadow: -8px 0 32px rgba(13,13,85,0.18);
+      animation: sidebarIn 280ms var(--ease-out) both;
+    }
+    @keyframes sidebarIn {
+      from { transform: translateX(100%); }
+      to   { transform: translateX(0); }
+    }
+    .sidebar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.5rem 1.25rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-title {
+      font-size: 1rem; font-weight: 700;
+      color: var(--text); letter-spacing: -0.02em;
+    }
+    .sidebar-close {
+      width: 2rem; height: 2rem;
+      border-radius: var(--r-full);
+      background: var(--bg-muted);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+    }
+    .sidebar-close svg { width: 14px; height: 14px; }
+    .sidebar-items { padding: 0.5rem 0; flex: 1; }
+    .menu-item {
+      display: flex; align-items: center; gap: 0.875rem;
+      padding: 1rem 1.25rem;
+      font-size: 0.9375rem; font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      border: none; background: none; width: 100%;
+      text-align: left;
+      transition: background 120ms ease;
+    }
+    .menu-item:active { background: var(--bg-muted); }
+    .menu-item svg { width: 20px; height: 20px; color: var(--text-muted); flex-shrink: 0; }
+
     /* ── CONTENT ── */
     .content {
       flex: 1;
@@ -1333,7 +1394,7 @@ const BudgetCard = ({ item, onEdit, onOpen, style }) => {
       </div>
       <div className="card-body">
         <div className="card-name">{item.name}</div>
-        <div className="card-sub">Resta {fmt(item.budget - spent)}</div>
+        <div className="card-sub">Margen {fmt(item.budget - spent)}</div>
         <div className="card-progress-bg">
           <div className="card-progress-fill" style={{ width: `${pct}%` }} />
         </div>
@@ -2167,6 +2228,9 @@ const App = () => {
   const [year, setYear]         = useState('2026');
   const [yearOpen, setYearOpen] = useState(false);
   const [exportOk, setExportOk] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef  = useRef(null);
+  const fileRef  = useRef(null);
   const [modal, setModal]           = useState(null);
   const [detail, setDetail]         = useState(null);
   const [planDetail, setPlanDetail] = useState(null);
@@ -2197,9 +2261,39 @@ const App = () => {
     const a    = document.createElement('a');
     a.href = url; a.download = `MarGen_${year}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setExportOk(true);
+    setExportOk(true); setMenuOpen(false);
     setTimeout(() => setExportOk(false), 2000);
   };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        // Validación básica: debe ser un objeto con al menos una clave de año
+        const keys = Object.keys(parsed);
+        const valid = keys.length > 0 && keys.every(k => /^\d{4}$/.test(k) && Array.isArray(parsed[k]));
+        if (!valid) { alert('El archivo no tiene el formato correcto de MarGen.'); return; }
+        if (!window.confirm('¿Seguro? Se reemplazarán todos los datos actuales con los del archivo.')) return;
+        setData(parsed);
+        setMenuOpen(false);
+      } catch {
+        alert('No se pudo leer el archivo. Asegúrate de que es un JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // reset para poder importar el mismo archivo dos veces
+  };
+
+  // Cerrar menú al hacer click fuera
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = e => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
 
   const handleSave = (item) => {
     setData(prev => {
@@ -2480,11 +2574,47 @@ const App = () => {
           )}
         </div>
         <div className="header-actions">
-          <button className={`icon-btn ${exportOk ? 'success' : ''}`} onClick={handleExport}>
-            {exportOk ? <CheckIcon /> : <DownloadIcon />}
-          </button>
+          <div className="hamburger-wrap" ref={menuRef}>
+            <button className="icon-btn" onClick={() => setMenuOpen(o => !o)} aria-label="Menú">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+              </svg>
+            </button>
+          </div>
+          <input ref={fileRef} type="file" accept=".json" style={{display:'none'}} onChange={handleImportFile}/>
         </div>
       </header>
+
+      {/* Sidebar menú */}
+      {menuOpen && (
+        <>
+          <div className="sidebar-overlay" onClick={() => setMenuOpen(false)}/>
+          <div className="sidebar">
+            <div className="sidebar-header">
+              <span className="sidebar-title">Menú</span>
+              <button className="sidebar-close" onClick={() => setMenuOpen(false)}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div className="sidebar-items">
+              <button className="menu-item" onClick={handleExport}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
+                </svg>
+                Exportar datos
+              </button>
+              <button className="menu-item" onClick={() => { fileRef.current.click(); setMenuOpen(false); }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                </svg>
+                Importar datos
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="content">
         {budgets.length === 0 ? (
