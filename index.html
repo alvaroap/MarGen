@@ -2152,8 +2152,18 @@ const ModalPresupuesto = ({ item, onSave, onDelete, onClose }) => {
 };
 
 /* ── APP ── */
+const STORAGE_KEY = 'margen-data';
+
+const loadData = () => {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return INITIAL_DATA;
+};
+
 const App = () => {
-  const [data, setData]         = useState(INITIAL_DATA);
+  const [data, setData]         = useState(loadData);
   const [year, setYear]         = useState('2026');
   const [yearOpen, setYearOpen] = useState(false);
   const [exportOk, setExportOk] = useState(false);
@@ -2163,6 +2173,13 @@ const App = () => {
   const [modalGasto, setModalGasto] = useState(false);
   const [editGasto, setEditGasto]   = useState(null);
   const [modalPlan, setModalPlan]   = useState(null); // null | 'new' | plan object
+
+  // Guardar en localStorage cada vez que cambian los datos
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch(e) {}
+  }, [data]);
 
   const budgets     = data[year] || [];
   const isFirstTime = Object.values(data).every(arr => arr.length === 0);
