@@ -1394,13 +1394,13 @@ const BudgetCard = ({ item, onEdit, onOpen, style }) => {
       </div>
       <div className="card-body">
         <div className="card-name">{item.name}</div>
-        <div className="card-sub">Margen {fmt(item.budget - spent)}</div>
+        <div className="card-sub">Presupuesto {fmt(item.budget)}</div>
         <div className="card-progress-bg">
           <div className="card-progress-fill" style={{ width: `${pct}%` }} />
         </div>
       </div>
       <div className="card-right">
-        <div className="card-amount">{fmt(item.budget)}</div>
+        <div className="card-amount">{fmt(item.budget - spent)}</div>
         <button className="card-edit" onClick={e => { e.stopPropagation(); onEdit(item); }}>
           <PencilIcon />
         </button>
@@ -2261,8 +2261,8 @@ const App = () => {
     const a    = document.createElement('a');
     a.href = url; a.download = `MarGen_${year}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setExportOk(true); setMenuOpen(false);
-    setTimeout(() => setExportOk(false), 2000);
+    setExportOk(true);
+    setTimeout(() => { setExportOk(false); setMenuOpen(false); }, 800);
   };
 
   const handleImportFile = (e) => {
@@ -2278,8 +2278,7 @@ const App = () => {
         if (!valid) { alert('El archivo no tiene el formato correcto de MarGen.'); return; }
         if (!window.confirm('¿Seguro? Se reemplazarán todos los datos actuales con los del archivo.')) return;
         setData(parsed);
-        setMenuOpen(false);
-      } catch {
+        setMenuOpen(false);      } catch {
         alert('No se pudo leer el archivo. Asegúrate de que es un JSON válido.');
       }
     };
@@ -2605,7 +2604,7 @@ const App = () => {
                 </svg>
                 Exportar datos
               </button>
-              <button className="menu-item" onClick={() => { fileRef.current.click(); setMenuOpen(false); }}>
+              <button className="menu-item" onClick={() => { fileRef.current.click(); }}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
                 </svg>
